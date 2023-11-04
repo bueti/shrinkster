@@ -1,13 +1,16 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Url struct {
 	gorm.Model
-	ShortURL  string `json:"short_url"`
-	Original  string `json:"original"`
-	Visits    uint   `json:"visits"`
-	ShortCode string `json:"short_code"`
-	UserID    int    `json:"user_id"`
-	User      User   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"id,omitempty"`
+	Original  string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
+	ShortUrl  string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
+	ShortCode string    `json:"short_code,omitempty"`
+	UserID    int       `json:"user_id"`
+	User      User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

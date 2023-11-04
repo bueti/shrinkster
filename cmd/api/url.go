@@ -27,7 +27,7 @@ func (app *application) redirectUrlHandler(c echo.Context) error {
 }
 
 func (app *application) listUrlsHandler(c echo.Context) error {
-	urls := []model.Url{}
+	var urls []model.Url
 	result := app.db.Find(&urls)
 	if result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, result.Error.Error())
@@ -41,14 +41,18 @@ func (app *application) createUrlHandler(c echo.Context) error {
 		return err
 	}
 
-	id := base62Encode(rand.Uint64())
-	url.ShortURL = id
+	if url.ShortCode != "" {
+		url.ShortUrl = url.ShortCode
+	} else {
+		id := base62Encode(rand.Uint64())
+		url.ShortUrl = id
+	}
 
 	resp := app.db.Create(url)
 	if resp.Error != nil {
 		return c.JSON(http.StatusInternalServerError, resp.Error.Error())
 	}
-	fullUrl := c.Scheme() + "://" + c.Request().Host + "/s/" + url.ShortURL
+	fullUrl := c.Scheme() + "://" + c.Request().Host + "/s/" + url.ShortUrl
 	return c.JSON(http.StatusCreated, fullUrl)
 }
 

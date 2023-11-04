@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -13,6 +14,8 @@ func initEcho() *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Gzip())
+	e.Use(echoprometheus.NewMiddleware("shrinkster"))
+	e.GET("/metrics", echoprometheus.NewHandler())
 
 	return e
 }
