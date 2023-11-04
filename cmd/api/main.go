@@ -61,6 +61,7 @@ func main() {
 		log.Fatal(err)
 	}
 	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Url{})
 
 	// initial echo router
 	e := initEcho()

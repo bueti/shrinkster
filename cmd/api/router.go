@@ -18,10 +18,18 @@ func initEcho() *echo.Echo {
 }
 
 func (app *application) registerRoutes() {
+	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
+	// user routes
 	app.echo.GET("/users", app.listUsersHandler)
 	app.echo.GET("/users/:id", app.getUserHandler)
 	app.echo.POST("/users", app.createUserHandler)
 	app.echo.PUT("/users/:id", app.updateUserHandler)
 	app.echo.DELETE("/users/:id", app.deleteUserHandler)
+	// url routes
+	app.echo.GET("/urls", app.listUrlsHandler)
+	app.echo.POST("/urls", app.createUrlHandler)
+	app.echo.PUT("/urls/:id", app.updateUrlHandler)
+	app.echo.DELETE("/urls/:id", app.deleteUrlHandler)
+	app.echo.GET("/s/*", app.redirectUrlHandler)
 }
