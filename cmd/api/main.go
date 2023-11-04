@@ -25,7 +25,7 @@ type config struct {
 	}
 }
 
-type Application struct {
+type application struct {
 	config config
 	echo   *echo.Echo
 	db     *gorm.DB
@@ -65,7 +65,7 @@ func main() {
 	// initial echo router
 	e := initEcho()
 
-	app := &Application{
+	app := &application{
 		config: cfg,
 		db:     db,
 		echo:   e,

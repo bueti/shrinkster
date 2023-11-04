@@ -17,6 +17,11 @@ func initEcho() *echo.Echo {
 	return e
 }
 
-func (app *Application) registerRoutes() {
+func (app *application) registerRoutes() {
 	app.echo.GET("/health", app.healthcheckHandler)
+	app.echo.GET("/users", app.listUsersHandler)
+	app.echo.GET("/users/:id", app.getUserHandler)
+	app.echo.POST("/users", app.createUserHandler)
+	app.echo.PUT("/users/:id", app.updateUserHandler)
+	app.echo.DELETE("/users/:id", app.deleteUserHandler)
 }

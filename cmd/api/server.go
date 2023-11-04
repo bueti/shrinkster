@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (app *Application) serve() error {
+func (app *application) serve() error {
 	// Start server
 	go func() {
 		addr := fmt.Sprintf(":%d", app.config.port)
