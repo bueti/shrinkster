@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,7 @@ type User struct {
 	Name     string    `gorm:"type:varchar(255)"`
 	Email    string    `gorm:"not null;uniqueIndex"`
 	Password string    `gorm:"not null"`
+	Role     string    `gorm:"default:'user'"`
 }
 
 type UserRegisterReq struct {
@@ -107,4 +109,9 @@ func (u *UserModel) GetByID(id uuid.UUID) (*User, error) {
 		return nil, result.Error
 	}
 	return user, nil
+}
+
+func (u *UserModel) GetRole(c echo.Context) (string, error) {
+	user := c.Get("user").(*User)
+	return user.Role, nil
 }

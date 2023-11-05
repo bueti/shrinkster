@@ -15,12 +15,14 @@ const (
 type Models struct {
 	Urls  UrlModel
 	Users UserModel
+	Roles RoleModel
 }
 
 func NewModels(db *gorm.DB) Models {
 	return Models{
 		Users: UserModel{DB: db},
 		Urls:  UrlModel{DB: db},
+		Roles: RoleModel{DB: db},
 	}
 }
 

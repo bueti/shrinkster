@@ -2,11 +2,12 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/bueti/shrinkster/internal/model"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/pascaldekloe/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,14 +48,22 @@ func (app *application) loginUserHandler(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	token, err := jwt.New(jwt.SigningMethodHS256).SignedString([]byte(app.config.signingKey))
+	var claims jwt.Claims
+	claims.Subject = user.ID.String()
+	claims.Issued = jwt.NewNumericTime(time.Now())
+	claims.NotBefore = jwt.NewNumericTime(time.Now())
+	claims.Expires = jwt.NewNumericTime(time.Now().Add(24 * time.Hour))
+	claims.Issuer = "shrink.ch"
+	claims.Audiences = []string{"shrink.ch"}
+
+	jwtBytes, err := claims.HMACSign(jwt.HS256, []byte(app.config.signingKey))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	userLoginResponse := model.UserLoginResponse{
 		ID:    user.ID,
-		Token: token,
+		Token: string(jwtBytes),
 	}
 
 	return c.JSON(http.StatusOK, userLoginResponse)

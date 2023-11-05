@@ -83,6 +83,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.AutoMigrate(&model.Role{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// initial echo router
 	e := initEcho()
