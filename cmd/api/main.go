@@ -23,6 +23,7 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  string
 	}
+	signingKey string
 }
 
 type application struct {
@@ -38,6 +39,7 @@ func main() {
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.StringVar(&cfg.signingKey, "signing-key", "", "JWT signing key")
 
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 
@@ -54,6 +56,14 @@ func main() {
 			log.Fatal("DSN is required")
 		}
 		cfg.db.dsn = envDSN
+	}
+
+	if cfg.signingKey == "" {
+		envSigningKey := os.Getenv("SIGNING_KEY")
+		if envSigningKey == "" {
+			log.Fatal("SIGNING_KEY is required")
+		}
+		cfg.signingKey = envSigningKey
 	}
 
 	db, err := openDB(cfg)
@@ -78,6 +88,7 @@ func main() {
 		echo:   e,
 	}
 
+	app.registerMiddleware()
 	app.registerRoutes()
 	app.serve()
 

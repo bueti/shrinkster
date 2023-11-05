@@ -29,3 +29,13 @@ type UserResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type UserLoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=72"`
+}
+
+type UserLoginResponse struct {
+	ID    uuid.UUID `json:"id"`
+	Token string    `json:"token"`
+}

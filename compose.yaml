@@ -7,6 +7,7 @@ services:
       - 8080:8080
     environment:
       DSN: ${DSN}
+      SIGNING_KEY: ${SIGNING_KEY}
     depends_on:
       db:
         condition: service_healthy

@@ -6,13 +6,13 @@ import (
 	"regexp"
 
 	"github.com/bueti/shrinkster/internal/model"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) createUserHandler(c echo.Context) error {
-
 	var body model.UserRequest
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -57,6 +57,37 @@ func (app *application) createUserHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, userResponse)
+}
+
+// LoginUserHandler handles the login of a user
+func (app *application) loginUserHandler(c echo.Context) error {
+	var body model.UserLoginRequest
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	user := &model.User{}
+	result := app.db.Where("email = ?", body.Email).First(&user)
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, result.Error.Error())
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, "invalid credentials")
+	}
+
+	token, err := jwt.New(jwt.SigningMethodHS256).SignedString([]byte(app.config.signingKey))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	userLoginResponse := model.UserLoginResponse{
+		ID:    user.ID,
+		Token: token,
+	}
+
+	return c.JSON(http.StatusOK, userLoginResponse)
 }
 
 func (app *application) getUserHandler(c echo.Context) error {
