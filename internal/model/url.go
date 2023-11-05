@@ -39,7 +39,9 @@ type UrlByUserRequest struct {
 }
 
 type UrlByUserResponse struct {
-	Urls []Url
+	ID       uuid.UUID `json:"id"`
+	Original string    `json:"original"`
+	ShortUrl string    `json:"short_url"`
 }
 
 func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
@@ -82,12 +84,21 @@ func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 }
 
 // GetUrlByUser returns all URLs for a given user
-func (u *UrlModel) GetUrlByUser(userId uuid.UUID) ([]Url, error) {
+func (u *UrlModel) GetUrlByUser(userId uuid.UUID) (*[]UrlByUserResponse, error) {
 	var urls []Url
 	result := u.DB.Where("user_id = ?", userId).Find(&urls)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return urls, nil
+	resp := []UrlByUserResponse{}
+	for _, url := range urls {
+		resp = append(resp, UrlByUserResponse{
+			ID:       url.ID,
+			Original: url.Original,
+			ShortUrl: url.ShortUrl,
+		})
+	}
+
+	return &resp, nil
 }
