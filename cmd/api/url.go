@@ -11,7 +11,7 @@ import (
 func (app *application) redirectUrlHandler(c echo.Context) error {
 	wildcardValue := c.Param("*")
 	shortUrl := strings.TrimSuffix(wildcardValue, "/")
-	url, err := app.models.Urls.Get(shortUrl)
+	url, err := app.models.Urls.GetRedirect(shortUrl)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

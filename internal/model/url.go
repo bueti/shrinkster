@@ -20,6 +20,7 @@ type Url struct {
 	ShortUrl string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
 	UserID   uuid.UUID `json:"user_id"`
 	User     User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Visits   int       `gorm:"default:0" json:"visits"`
 }
 
 type UrlCreateRequest struct {
@@ -58,11 +59,16 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	return *url, nil
 }
 
-func (u *UrlModel) Get(shortUrl string) (Url, error) {
+func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 	url := new(Url)
 	result := u.DB.Where("short_url = ?", shortUrl).First(&url)
 	if result.Error != nil {
 		return Url{}, result.Error
 	}
+
+	go func() {
+		u.DB.Model(&url).Update("visits", gorm.Expr("visits + 1"))
+	}()
+
 	return *url, nil
 }
