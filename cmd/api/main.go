@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/bueti/shrinkster/internal/model"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 const version = "0.0.1"
@@ -24,6 +26,7 @@ type config struct {
 		maxIdleTime  string
 	}
 	signingKey string
+	debug      bool
 }
 
 type application struct {
@@ -66,6 +69,8 @@ func main() {
 		cfg.signingKey = envSigningKey
 	}
 
+	_, cfg.debug = os.LookupEnv("DEBUG")
+
 	db, err := openDB(cfg)
 	if err != nil {
 		log.Fatal(err)
@@ -95,7 +100,26 @@ func main() {
 }
 
 func openDB(cfg config) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(cfg.db.dsn), &gorm.Config{})
+	loggerCfg := logger.Config{}
+	if cfg.debug {
+		loggerCfg.LogLevel = logger.Info
+		loggerCfg.ParameterizedQueries = false
+	} else {
+		loggerCfg.LogLevel = logger.Error
+		loggerCfg.ParameterizedQueries = true
+
+	}
+	loggerCfg.SlowThreshold = time.Second
+	loggerCfg.Colorful = false
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		loggerCfg,
+	)
+
+	db, err := gorm.Open(postgres.Open(cfg.db.dsn), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		return nil, err
 	}
