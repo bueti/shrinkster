@@ -29,7 +29,7 @@ type config struct {
 type application struct {
 	config config
 	echo   *echo.Echo
-	db     *gorm.DB
+	models model.Models
 }
 
 func main() {
@@ -84,8 +84,8 @@ func main() {
 
 	app := &application{
 		config: cfg,
-		db:     db,
 		echo:   e,
+		models: model.NewModels(db),
 	}
 
 	app.registerMiddleware()

@@ -41,14 +41,11 @@ func (app *application) registerRoutes() {
 	// user routes
 	app.echo.GET("/users", app.listUsersHandler)
 	app.echo.GET("/users/:id", app.getUserHandler)
-	app.echo.PUT("/users/:id", app.updateUserHandler)
-	app.echo.DELETE("/users/:id", app.deleteUserHandler)
+	//app.echo.PUT("/users/:id", app.updateUserHandler)
+	//app.echo.DELETE("/users/:id", app.deleteUserHandler)
 	app.echo.POST("/signup", app.createUserHandler)
 	app.echo.POST("/login", app.loginUserHandler)
 	// url routes
-	app.echo.GET("/urls", app.listUrlsHandler)
 	app.echo.POST("/urls", app.createUrlHandler)
-	app.echo.PUT("/urls/:id", app.updateUrlHandler)
-	app.echo.DELETE("/urls/:id", app.deleteUrlHandler)
 	app.echo.GET("/s/*", app.redirectUrlHandler)
 }

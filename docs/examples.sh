@@ -2,7 +2,7 @@ HOST=${HOST:-localhost:8080}
 
 curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
 "name": "foo2",
-"email": "foo2@example.com",
+"email": "foo@example.com",
 "password": "12345678",
 "password_confirm": "12345678"
 }'
@@ -22,10 +22,10 @@ curl -XPOST ${HOST}/urls -H "Content-Type: application/json" -d '{
 "original": "https://www.granviaje.ch/goodbye-brazil/",
 "user_id": 1
 }'
-curl -XPOST ${HOST}/urls -H "Content-Type: application/json" -d '{
+curl -XPOST ${HOST}/urls -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d '{
 "original": "https://www.granviaje.ch/goodbye-brazil/",
 "short_code": "foo",
-"user_id": 1
+"user_id": "63920346-70d0-40ec-8f53-f8d019628804"
 }'
 
 curl -XGET ${HOST}/s/audNtvP2MAm
