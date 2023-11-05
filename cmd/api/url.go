@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bueti/shrinkster/internal/model"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -34,4 +35,19 @@ func (app *application) createUrlHandler(c echo.Context) error {
 		ID:      url.ID,
 		FullUrl: fullUrl,
 	})
+}
+
+func (app *application) getUrlByUserHandler(c echo.Context) error {
+	userID := c.Param("user_id")
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	urls, err := app.models.Urls.GetUrlByUser(userUUID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, urls)
 }

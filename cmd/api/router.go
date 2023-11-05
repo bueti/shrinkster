@@ -47,5 +47,6 @@ func (app *application) registerRoutes() {
 	app.echo.POST("/login", app.loginUserHandler)
 	// url routes
 	app.echo.POST("/urls", app.createUrlHandler)
+	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler)
 	app.echo.GET("/s/*", app.redirectUrlHandler)
 }

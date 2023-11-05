@@ -18,7 +18,7 @@ type Url struct {
 	ID       uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"id,omitempty"`
 	Original string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
 	ShortUrl string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
-	UserID   uuid.UUID `json:"user_id"`
+	UserID   uuid.UUID `gorm:"type:uuid" json:"user_id"`
 	User     User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Visits   int       `gorm:"default:0" json:"visits"`
 }
@@ -32,6 +32,14 @@ type UrlCreateRequest struct {
 type UrlResponse struct {
 	ID      uuid.UUID `json:"id"`
 	FullUrl string    `json:"full_url"`
+}
+
+type UrlByUserRequest struct {
+	ID uuid.UUID `json:"user_id"`
+}
+
+type UrlByUserResponse struct {
+	Urls []Url
 }
 
 func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
@@ -71,4 +79,15 @@ func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 	}()
 
 	return *url, nil
+}
+
+// GetUrlByUser returns all URLs for a given user
+func (u *UrlModel) GetUrlByUser(userId uuid.UUID) ([]Url, error) {
+	var urls []Url
+	result := u.DB.Where("user_id = ?", userId).Find(&urls)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return urls, nil
 }
