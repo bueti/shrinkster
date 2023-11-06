@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bueti/shrinkster/internal/model"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/pascaldekloe/jwt"
@@ -70,5 +71,27 @@ func (app *application) requireRole(role string) echo.MiddlewareFunc {
 			// If the user has the required role, call the next handler
 			return next(c)
 		}
+	}
+}
+
+func (app *application) mustBeOwner(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user := c.Get("user").(*model.User)
+		// admins are allowed to see anything
+		if user.Role == "admin" {
+			return next(c)
+		}
+
+		userID := c.Param("user_id")
+		userUUID, err := uuid.Parse(userID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+
+		if user.ID != userUUID {
+			return c.JSON(http.StatusUnauthorized, "Unauthorized")
+		}
+
+		return next(c)
 	}
 }

@@ -36,6 +36,6 @@ func (app *application) registerRoutes() {
 	app.echo.POST("/login", app.loginUserHandler)
 	// url routes
 	app.echo.POST("/urls", app.createUrlHandler, app.authenticate)
-	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate)
+	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/s/*", app.redirectUrlHandler)
 }

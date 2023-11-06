@@ -1,8 +1,12 @@
 HOST=${HOST:-localhost:8080}
 
+admin_id="63920346-70d0-40ec-8f53-f8d019628804"
+non_privileged_id="a6ba3348-6bb3-49fa-81f2-87fb9f984b56"
+owner_id="af138557-d47b-480a-917e-2a51437a13f7"
+
 curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
-"name": "foo2",
-"email": "foo@example.com",
+"name": "non-privileged user",
+"email": "sad-user@example.com",
 "password": "12345678",
 "password_confirm": "12345678"
 }'
@@ -30,3 +34,8 @@ curl -XPOST ${HOST}/urls -H "Authorization: Bearer $token" -H "Content-Type: app
 
 curl -XGET ${HOST}/s/audNtvP2MAm
 curl -XGET ${HOST}/s/HxDxQxDHAVp
+
+# get all urls for user
+owner="63920346-70d0-40ec-8f53-f8d019628804"
+not_owner="af138557-d47b-480a-917e-2a51437a13f7"
+curl ${HOST}/urls/$not_owner -H "Authorization: Bearer $token" -H "Content-Type: application/json"
