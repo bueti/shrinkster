@@ -1,6 +1,10 @@
 package main
 
 import (
+	"html/template"
+	"net/http"
+
+	"github.com/bueti/shrinkster/ui"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -10,6 +14,33 @@ func initEcho() *echo.Echo {
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
+	templates := template.New("")
+	files, err := ui.Files.ReadDir("html")
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		// Read the embedded file
+		content, err := ui.Files.ReadFile("html/" + file.Name())
+		if err != nil {
+			panic(err)
+		}
+
+		// Parse the template
+		templateName := file.Name()
+		_, err = templates.New(templateName).Parse(string(content))
+		if err != nil {
+			panic(err)
+		}
+	}
+	t := &Template{
+		templates: templates,
+	}
+	e.Renderer = t
 
 	return e
 }
@@ -25,6 +56,11 @@ func (app *application) registerMiddleware() {
 }
 
 func (app *application) registerRoutes() {
+	fileServer := http.FileServer(http.FS(ui.Files))
+	app.echo.GET("/static/*filepath", echo.WrapHandler(fileServer))
+
+	app.echo.GET("/", app.indexHandler)
+
 	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
 	// user routes

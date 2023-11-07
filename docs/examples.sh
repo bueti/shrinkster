@@ -5,8 +5,15 @@ non_privileged_id="a6ba3348-6bb3-49fa-81f2-87fb9f984b56"
 owner_id="af138557-d47b-480a-917e-2a51437a13f7"
 
 curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
+"name": "admin user",
+"email": "admin@shrinkster.ch",
+"password": "EJ2pooBa0caivemu",
+"password_confirm": "EJ2pooBa0caivemu"
+}'
+
+curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
 "name": "non-privileged user",
-"email": "sad-user@example.com",
+"email": "user@shrinkster.ch",
 "password": "12345678",
 "password_confirm": "12345678"
 }'
