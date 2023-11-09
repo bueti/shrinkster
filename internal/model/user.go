@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -53,6 +54,9 @@ func (u *UserModel) Login(email, password string) (*User, error) {
 	result := u.DB.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
+	}
+	if !checkPasswordHash(password, user.Password) {
+		return nil, fmt.Errorf("invalid password")
 	}
 	return user, nil
 }
@@ -114,4 +118,14 @@ func (u *UserModel) GetByID(id uuid.UUID) (*User, error) {
 func (u *UserModel) GetRole(c echo.Context) (string, error) {
 	user := c.Get("user").(*User)
 	return user.Role, nil
+}
+
+// checkPasswordHash compares a plain text password with a hashed password
+// and returns true if they match or false otherwise.
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
 }

@@ -1,6 +1,9 @@
 {{define "title"}}Login{{end}}
 
 {{define "main"}}
+{{ if .Error }}
+<p style="color: red;">{{ .Error }}</p>
+{{ end }}
 <h2 class="text-2xl font-bold text-gray-900">Login</h2>
 <p class="mt-4 text-gray-600">Please enter your information below to login.</p>
 <form class="mt-8" action="/login" method="post">

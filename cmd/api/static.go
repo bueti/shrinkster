@@ -18,8 +18,3 @@ func (app *application) aboutHandler(c echo.Context) error {
 func (app *application) signupHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "signup.tmpl.html", nil)
 }
-
-// loginHandler handles the display of the login form.
-func (app *application) loginHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "login.tmpl.html", nil)
-}

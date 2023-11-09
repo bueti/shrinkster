@@ -3,10 +3,13 @@ module github.com/bueti/shrinkster
 go 1.21.1
 
 require (
+	github.com/alexedwards/scs/postgresstore v0.0.0-20231022164606-84bd122bd881
+	github.com/alexedwards/scs/v2 v2.6.0
 	github.com/google/uuid v1.4.0
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/labstack/gommon v0.4.0
 	github.com/pascaldekloe/jwt v1.12.0
+	github.com/spazzymoto/echo-scs-session v1.0.0
 	golang.org/x/crypto v0.14.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5

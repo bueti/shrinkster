@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/postgresstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/bueti/shrinkster/internal/model"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
@@ -30,9 +32,10 @@ type config struct {
 }
 
 type application struct {
-	config config
-	echo   *echo.Echo
-	models model.Models
+	config         config
+	echo           *echo.Echo
+	models         model.Models
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -75,20 +78,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = db.AutoMigrate(&model.User{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = db.AutoMigrate(&model.Url{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = db.AutoMigrate(&model.Role{})
+
+	err = db.AutoMigrate(&model.User{}, &model.Role{}, &model.Url{}, &model.Session{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	app := &application{}
+	dbd, _ := db.DB()
+
+	sessionManager := scs.New()
+	sessionManager.Store = postgresstore.New(dbd)
+	sessionManager.Lifetime = 7 * 24 * time.Hour
+
+	app := &application{
+		sessionManager: sessionManager,
+	}
 
 	app.echo = app.initEcho()
 	app.models = model.NewModels(db)

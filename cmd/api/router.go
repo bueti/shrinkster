@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/spazzymoto/echo-scs-session"
 )
 
 func (app *application) initEcho() *echo.Echo {
@@ -29,6 +30,7 @@ func (app *application) registerMiddleware() {
 	app.echo.Use(middleware.Secure())
 	app.echo.Use(middleware.BodyLimit("1M"))
 	app.echo.Use(middleware.RequestID())
+	app.echo.Use(session.LoadAndSave(app.sessionManager))
 }
 
 func (app *application) registerRoutes() {

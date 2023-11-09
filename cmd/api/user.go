@@ -33,6 +33,37 @@ func (app *application) createUserHandler(c echo.Context) error {
 
 // LoginUserHandler handles the login of a user
 func (app *application) loginUserHandler(c echo.Context) error {
+	contentType := c.Request().Header.Get(echo.HeaderContentType)
+	switch contentType {
+	case echo.MIMEApplicationJSON:
+		return app.handleJSONRequest(c)
+	case echo.MIMEApplicationForm:
+		return app.handleFormURLEncodedRequest(c)
+	default:
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
+	}
+
+}
+
+func (app *application) handleFormURLEncodedRequest(c echo.Context) error {
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+
+	user, err := app.models.Users.Login(email, password)
+	if err != nil {
+		return c.Render(http.StatusUnauthorized, "login.tmpl.html", map[string]interface{}{
+			"Error": "Invalid credentials",
+		})
+	}
+
+	app.sessionManager.Put(c.Request().Context(), "authenticated", "true")
+	c.Set("user", user)
+
+	return c.Redirect(http.StatusSeeOther, "/")
+
+}
+
+func (app *application) handleJSONRequest(c echo.Context) error {
 	var body model.UserLoginRequest
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -97,6 +128,11 @@ func (app *application) listUsersHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, users)
+}
+
+// loginHandler handles the display of the login form.
+func (app *application) loginHandler(c echo.Context) error {
+	return c.Render(http.StatusOK, "login.tmpl.html", nil)
 }
 
 //func (app *application) updateUserHandler(c echo.Context) error {
