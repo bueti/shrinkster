@@ -1,0 +1,28 @@
+{{define "title"}}Sign Up{{end}}
+{{define "main"}}
+<h2 class="text-2xl font-bold text-gray-900">Sign Up</h2>
+<p class="mt-4 text-gray-600">Please enter your information below to sign up.</p>
+<form class="mt-8" action="/signup" method="post">
+    <div class="flex flex-col">
+        <label for="email" class="hidden">Email</label>
+        <input type="email" name="email" id="email" placeholder="Email"
+               class="px-4 py-3 rounded-lg shadow-lg focus:outline-none focus:shadow-outline"/>
+    </div>
+    <div class="flex flex-col mt-4">
+        <label for="password" class="hidden">Password</label>
+        <input type="password" name="password" id="password" placeholder="Password"
+               class="px-4 py-3 rounded-lg shadow-lg focus:outline-none focus:shadow-outline"/>
+    </div>
+    <div class="flex flex-col mt-4">
+        <label for="confirm-password" class="hidden">Confirm Password</label>
+        <input type="password" name="confirm-password" id="confirm-password" placeholder="Confirm Password"
+               class="px-4 py-3 rounded-lg shadow-lg focus:outline-none focus:shadow-outline"/>
+    </div>
+    <div class="mt-6">
+        <button type="submit"
+                class="px-4 py-3 rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:shadow-outline">
+            Sign Up
+        </button>
+    </div>
+</form>
+{{end}}

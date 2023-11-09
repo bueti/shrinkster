@@ -1,0 +1,24 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+<img class="h-20" src="/static/logo.png" alt="Shrinkster">
+<h1 class="mt-8 text-2xl font-bold text-gray-900 lg:text-3xl">
+    We shrink everything.
+    <br class="hidden lg:inline"/>
+    <span class="text-indigo-500">Except your ego!</span>
+</h1>
+<p class="mt-4 text-gray-600">
+    Shrinkster is a link shortening service that allows you to shrink any link to a more manageable size. We
+    also provide analytics on your links so you can see how many people are clicking on them.
+</p>
+<div class="mt-6">
+    <a href="/signup"
+       class="inline-block px-5 py-3 mt-8 font-medium text-white bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700">
+        Login
+    </a>
+    <a href="/login"
+       class="inline-block px-5 py-3 mt-8 font-medium text-indigo-600 bg-white rounded-md shadow-lg hover:bg-indigo-50">
+        Sign Up
+    </a>
+</div>
+{{end}}

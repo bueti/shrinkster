@@ -7,8 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/labstack/echo/v4"
 )
 
 func (app *application) serve() error {
@@ -32,8 +30,4 @@ func (app *application) serve() error {
 	}
 
 	return nil
-}
-
-func (app *application) indexHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "base.tmpl.html", "Hello, World!")
 }

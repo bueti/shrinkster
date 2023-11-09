@@ -1,53 +1,37 @@
+{{define "base"}}
 <!doctype html>
 <html lang='en'>
-
 <head>
     <meta charset='utf-8'>
-    <title>Shrinkster - Link Shrink Service</title>
+    <title>{{template "title" .}} - Shrinkster</title>
     <link rel="stylesheet" href="/static/css/tailwind.css"/>
     <link rel="stylesheet" href="https://cdn.xeiaso.net/static/pkg/iosevka/family.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body class="bg-gray-100">
+    <header>
+        {{template "nav" .}}
+    </header>
 
-<div class="grid lg:grid-cols-2">
-
-    <div class="px-8 py-12 max-w-full mx-auto lg:px-12 lg:py-24">
-        <img class="h-20" src="/static/logo.png" alt="Shrinkster">
-        <img class="mt-8 rounded-lg shadow-xl h-64 w-full object-cover object-center lg:hidden" src="/static/splash.jpg"
-             alt="sunset at a beach">
-        <h1 class="mt-8 text-2xl font-bold text-gray-900 lg:text-3xl">
-            We shrink everything.
-            <br class="hidden lg:inline"/>
-            <span class="text-indigo-500">Except your ego!</span>
-        </h1>
-        <p class="mt-4 text-gray-600">
-            Shrinkster is a link shortening service that allows you to shrink any link to a more manageable size. We
-            also provide analytics on your links so you can see how many people are clicking on them.
-        </p>
-        <div class="mt-6">
-            <a href="#"
-               class="inline-block px-5 py-3 mt-8 font-medium text-white bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700">
-                Login
-            </a>
-            <a href="#"
-               class="inline-block px-5 py-3 mt-8 font-medium text-indigo-600 bg-white rounded-md shadow-lg hover:bg-indigo-50">
-                Sign Up
-            </a>
+    <main>
+        <div class="grid lg:grid-cols-2">
+            <div class="px-8 py-12 max-w-full mx-auto lg:px-12 lg:py-24">
+                <img class="mt-8 rounded-lg shadow-xl h-64 w-full object-cover object-center lg:hidden" src="/static/splash.jpg"
+                     alt="sunset at a beach">
+                {{template "main" .}}
+            </div>
+            <div class="hidden relative lg:block">
+                <img class="absolute inset-0 w-full h-full object-cover object-center" src="/static/splash.jpg"
+                     alt="sunset at a beach">
+            </div>
         </div>
-    </div>
-    <div class="hidden relative lg:block">
-        <img class="absolute inset-0 w-full h-full object-cover object-center" src="/static/splash.jpg"
-             alt="sunset at a beach">
-    </div>
+    </main>
 
-</div>
-<div class="mt-4">
     <footer class="text-gray-400 px-8 max-w-xl mx-auto text-center">
-        All Your Shrink Are Belong To Us
+        {{template "footer" .}}
     </footer>
-</div>
-</body>
 
+</body>
 </html>
+{{end}}

@@ -88,14 +88,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// initial echo router
-	e := initEcho()
+	app := &application{}
 
-	app := &application{
-		config: cfg,
-		echo:   e,
-		models: model.NewModels(db),
-	}
+	app.echo = app.initEcho()
+	app.models = model.NewModels(db)
+	app.config = cfg
 
 	app.registerMiddleware()
 	app.registerRoutes()

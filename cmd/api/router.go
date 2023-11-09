@@ -1,7 +1,6 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/bueti/shrinkster/ui"
@@ -10,37 +9,14 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-func initEcho() *echo.Echo {
+func (app *application) initEcho() *echo.Echo {
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
-	templates := template.New("")
-	files, err := ui.Files.ReadDir("html")
-	if err != nil {
-		panic(err)
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
 
-		// Read the embedded file
-		content, err := ui.Files.ReadFile("html/" + file.Name())
-		if err != nil {
-			panic(err)
-		}
-
-		// Parse the template
-		templateName := file.Name()
-		_, err = templates.New(templateName).Parse(string(content))
-		if err != nil {
-			panic(err)
-		}
+	e.Renderer = &Template{
+		templates: app.initTemplate(),
 	}
-	t := &Template{
-		templates: templates,
-	}
-	e.Renderer = t
 
 	return e
 }
@@ -60,6 +36,10 @@ func (app *application) registerRoutes() {
 	app.echo.GET("/static/*filepath", echo.WrapHandler(fileServer))
 
 	app.echo.GET("/", app.indexHandler)
+	app.echo.GET("/about", app.aboutHandler)
+	app.echo.GET("/signup", app.signupHandler)
+	//app.echo.GET("/login", app.loginHandler)
+	//app.echo.GET("/logout", app.logoutHandler)
 
 	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
