@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -40,9 +41,12 @@ type UrlByUserRequest struct {
 }
 
 type UrlByUserResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Original string    `json:"original"`
-	ShortUrl string    `json:"short_url"`
+	ID        uuid.UUID `json:"id"`
+	Original  string    `json:"original"`
+	ShortUrl  string    `json:"short_url"`
+	Visits    int       `json:"visits"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
@@ -98,11 +102,34 @@ func (u *UrlModel) GetUrlByUser(userId uuid.UUID) (*[]UrlByUserResponse, error) 
 	resp := []UrlByUserResponse{}
 	for _, url := range urls {
 		resp = append(resp, UrlByUserResponse{
-			ID:       url.ID,
-			Original: url.Original,
-			ShortUrl: url.ShortUrl,
+			ID:        url.ID,
+			Original:  url.Original,
+			ShortUrl:  url.ShortUrl,
+			Visits:    url.Visits,
+			CreatedAt: url.CreatedAt,
+			UpdatedAt: url.UpdatedAt,
 		})
 	}
 
 	return &resp, nil
+}
+
+func (u *UrlModel) Delete(urlUUID uuid.UUID) error {
+	url := new(Url)
+	result := u.DB.Where("id = ?", urlUUID).Delete(&url)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+func (u *UrlModel) Find(urlUUID uuid.UUID) *Url {
+	url := new(Url)
+	result := u.DB.Where("id = ?", urlUUID).First(&url)
+	if result.Error != nil {
+		return nil
+	}
+
+	return url
 }

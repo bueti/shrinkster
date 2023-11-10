@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bueti/shrinkster/internal/model"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/pascaldekloe/jwt"
@@ -13,6 +12,9 @@ import (
 
 func (app *application) authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		if app.isAuthenticated(c) {
+			return next(c)
+		}
 		authorizationHeader := c.Request().Header.Get("Authorization")
 		if authorizationHeader == "" {
 			return c.JSON(http.StatusUnauthorized, "Unauthorized")
@@ -76,19 +78,20 @@ func (app *application) requireRole(role string) echo.MiddlewareFunc {
 
 func (app *application) mustBeOwner(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		user := c.Get("user").(*model.User)
+		user, err := app.userFromContext(c)
+		if err != nil {
+			return c.Render(http.StatusUnauthorized, "home.tmpl.html", app.newTemplateData(c))
+		}
 		// admins are allowed to see anything
 		if user.Role == "admin" {
 			return next(c)
 		}
 
-		userID := c.Param("user_id")
-		userUUID, err := uuid.Parse(userID)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err.Error())
-		}
+		urlID := c.Param("id")
+		urlUUID := uuid.MustParse(urlID)
+		url := app.models.Urls.Find(urlUUID)
 
-		if user.ID != userUUID {
+		if user.ID != url.UserID {
 			return c.JSON(http.StatusUnauthorized, "Unauthorized")
 		}
 

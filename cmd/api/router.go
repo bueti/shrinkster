@@ -42,6 +42,7 @@ func (app *application) registerRoutes() {
 	app.echo.GET("/health", app.healthcheckHandler)
 
 	// API routes
+	app.echo.GET("dashboard", app.dashboardHandler, app.authenticate)
 	// user
 	app.echo.GET("/users", app.listUsersHandler, app.authenticate, app.requireRole("admin"))
 	app.echo.GET("/users/:id", app.getUserHandler, app.authenticate)
@@ -54,6 +55,7 @@ func (app *application) registerRoutes() {
 	app.echo.POST("/login", app.loginUserHandler)
 	// url
 	app.echo.POST("/urls", app.createUrlHandler, app.authenticate)
+	app.echo.POST("/urls/:id", app.deleteUrlHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/s/*", app.redirectUrlHandler)
 }

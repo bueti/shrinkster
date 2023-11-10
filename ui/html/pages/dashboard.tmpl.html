@@ -1,25 +1,44 @@
 {{define "title"}}Dashboard{{end}}
 {{define "main"}}
-<h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
-<p class="mt-4 text-gray-600">Welcome back, {{ .User.Name }}!</p>
-<!-- List of your urls -->
-{{ if .Urls }}
-<div>
-    <h3 class="mt-8 text-xl font-bold text-gray-900">Your URLs</h3>
-    <ul class="mt-4">
-        {{ range .Urls }}
-        <li class="flex items-center justify-between py-2">
-            <div class="flex items-center">
-                <a href="{{ .Original }}" class="text-indigo-600 hover:underline">{{ .Original }}</a>
-                <span class="text-gray-500 mx-2">→</span>
-                <a href="{{ .ShortUrl }}" class="text-indigo-600 hover:underline">{{ .ShortUrl }}</a>
-            </div>
-            <div>
-                <a href="/urls/{{ .ID }}/delete" class="text-red-600 hover:underline">Delete</a>
-            </div>
-        </li>
-        {{ end }}
-    </ul>
+<div class="px-8 py-8 max-w-full mx-auto lg:px-12 lg:12">
+    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+    <p class="mt-4 text-gray-600">Welcome back, {{ .User.Name }}!</p>
+    {{ if .Urls }}
+    <div>
+        <h3 class="mt-8 text-xl font-bold text-gray-900">Your URLs</h3>
+        <table class="table-auto">
+            <thead>
+            <tr>
+                <th>Original</th>
+                <th>Short</th>
+                <th>Created At</th>
+                <th>Visitors</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            {{ range .Urls }}
+            <tbody>
+            <tr>
+                <td class="px-4 py-2">
+                    <a href="{{ printf " %.25s" .Original }}" class="text-indigo-600 hover:underline">{{ .Original
+                    }}</a>
+                </td>
+                <td class="px-4 py-2">
+                    <a href="{{ .ShortUrl }}" class="text-indigo-600 hover:underline">{{ .ShortUrl }}</a>
+                </td>
+                <td class="px-4 py-2">{{humanDate .CreatedAt }}</td>
+                <td class="px-4 py-2">{{ .Visits }}</td>
+                <td class="px-4 py-2">
+                    <form action="/urls/{{ .ID }}" method="POST">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="text-red-600 hover:underline">🗑️</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+            {{ end }}
+        </table>
+    </div>
+    {{end}}
 </div>
-{{end}}
 {{end}}

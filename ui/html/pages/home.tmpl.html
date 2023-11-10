@@ -1,6 +1,8 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
+{{template "twoGridHead" .}}
+
 <img class="h-20" src="/static/logo.png" alt="Shrinkster">
 <h1 class="mt-8 text-2xl font-bold text-gray-900 lg:text-3xl">
     We shrink everything.
@@ -22,5 +24,12 @@
         Sign Up
     </a>
 </div>
+{{else}}
+<div class="mt-6">
+    <a href="/dashboard"
+       class="inline-block px-5 py-3 mt-8 font-medium text-white bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700">
+        Dashboard
+    </a>
 {{end}}
+{{template "twoGridFoot" .}}
 {{end}}

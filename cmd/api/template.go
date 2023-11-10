@@ -16,7 +16,7 @@ import (
 type templateData struct {
 	CurrentYear     int
 	Url             *model.Url
-	URLs            []*model.Url
+	Urls            []*model.Url
 	Form            any
 	Flash           string
 	IsAuthenticated bool

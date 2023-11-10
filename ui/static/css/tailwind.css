@@ -546,11 +546,6 @@ video {
   inset: 0px;
 }
 
-.mx-2 {
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-}
-
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -590,6 +585,10 @@ video {
 
 .flex {
   display: flex;
+}
+
+.table {
+  display: table;
 }
 
 .grid {
@@ -646,6 +645,10 @@ video {
 
 .flex-grow {
   flex-grow: 1;
+}
+
+.table-auto {
+  table-layout: auto;
 }
 
 .flex-col {
@@ -745,6 +748,11 @@ video {
   padding-bottom: 0.75rem;
 }
 
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
 .text-center {
   text-align: center;
 }
@@ -779,11 +787,6 @@ video {
 .text-gray-400 {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity));
-}
-
-.text-gray-500 {
-  --tw-text-opacity: 1;
-  color: rgb(107 114 128 / var(--tw-text-opacity));
 }
 
 .text-gray-600 {

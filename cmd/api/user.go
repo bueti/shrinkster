@@ -104,11 +104,10 @@ func (app *application) handleFormLogin(c echo.Context) error {
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusUnauthorized, "login.tmpl.html", data)
 	}
-
+	userID := user.ID.String()
 	app.sessionManager.Put(c.Request().Context(), "authenticated", true)
+	app.sessionManager.Put(c.Request().Context(), "userID", userID)
 	app.sessionManager.Put(c.Request().Context(), "flash", "Logged in successfully")
-
-	c.Set("user", user)
 
 	data := app.newTemplateData(c)
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
@@ -186,6 +185,7 @@ func (app *application) loginHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "login.tmpl.html", nil)
 }
 
+// logoutHandler handles the logout of a user.
 func (app *application) logoutHandler(c echo.Context) error {
 	err := app.sessionManager.RenewToken(c.Request().Context())
 	if err != nil {
