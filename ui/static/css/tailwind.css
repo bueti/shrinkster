@@ -611,6 +611,10 @@ video {
   height: 100%;
 }
 
+.min-h-screen {
+  min-height: 100vh;
+}
+
 .w-10 {
   width: 2.5rem;
 }
@@ -629,6 +633,10 @@ video {
 
 .shrink {
   flex-shrink: 1;
+}
+
+.flex-grow {
+  flex-grow: 1;
 }
 
 .flex-col {
@@ -674,6 +682,10 @@ video {
 .object-center {
   -o-object-position: center;
      object-position: center;
+}
+
+.p-8 {
+  padding: 2rem;
 }
 
 .px-4 {
