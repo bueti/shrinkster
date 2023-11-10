@@ -1,0 +1,25 @@
+{{define "title"}}Dashboard{{end}}
+{{define "main"}}
+<h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+<p class="mt-4 text-gray-600">Welcome back, {{ .User.Name }}!</p>
+<!-- List of your urls -->
+{{ if .Urls }}
+<div>
+    <h3 class="mt-8 text-xl font-bold text-gray-900">Your URLs</h3>
+    <ul class="mt-4">
+        {{ range .Urls }}
+        <li class="flex items-center justify-between py-2">
+            <div class="flex items-center">
+                <a href="{{ .Original }}" class="text-indigo-600 hover:underline">{{ .Original }}</a>
+                <span class="text-gray-500 mx-2">→</span>
+                <a href="{{ .ShortUrl }}" class="text-indigo-600 hover:underline">{{ .ShortUrl }}</a>
+            </div>
+            <div>
+                <a href="/urls/{{ .ID }}/delete" class="text-red-600 hover:underline">Delete</a>
+            </div>
+        </li>
+        {{ end }}
+    </ul>
+</div>
+{{end}}
+{{end}}

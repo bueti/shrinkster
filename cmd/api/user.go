@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/bueti/shrinkster/internal/model"
@@ -24,23 +25,40 @@ func (app *application) createUserHandler(c echo.Context) error {
 }
 
 func (app *application) handleFormSignup(c echo.Context) error {
-	user, err := app.models.Users.Register(&model.UserRegisterReq{
-		Name:            c.FormValue("name"),
-		Email:           c.FormValue("email"),
-		Password:        c.FormValue("password"),
-		PasswordConfirm: c.FormValue("password_confirm"),
-	})
-	if err != nil {
-		return c.Render(http.StatusBadRequest, "signup.tmpl.html", map[string]interface{}{
-			"Error": err.Error(),
-		})
+	name := c.FormValue("name")
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	passwordConfirm := c.FormValue("password_confirm")
+
+	emailRX := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	if !emailRX.MatchString(email) {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Invalid email address.")
+		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
-	app.sessionManager.Put(c.Request().Context(), "authenticated", "true")
-	app.sessionManager.Put(c.Request().Context(), "flash", "registered successfully")
-	c.Set("user", user)
+	if len(password) < 8 || len(password) > 72 {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Password must be between 8 and 72 characters long.")
+		return c.Render(http.StatusBadRequest, "signup.tmpl.html", app.newTemplateData(c))
+	}
 
-	return c.Redirect(http.StatusSeeOther, "/")
+	if password != passwordConfirm {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Password does not match.")
+		return c.Render(http.StatusBadRequest, "signup.tmpl.html", app.newTemplateData(c))
+	}
+
+	_, err := app.models.Users.Register(&model.UserRegisterReq{
+		Name:     name,
+		Email:    email,
+		Password: password,
+	})
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Internal Server Error. Please try again later.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
+	}
+
+	app.sessionManager.Put(c.Request().Context(), "flash", "Your signup was successful. Please log in.")
+	return c.Redirect(http.StatusSeeOther, "/login")
 }
 
 func (app *application) handleJSONSignup(c echo.Context) error {
@@ -82,18 +100,18 @@ func (app *application) handleFormLogin(c echo.Context) error {
 
 	user, err := app.models.Users.Login(email, password)
 	if err != nil {
-		return c.Render(http.StatusUnauthorized, "login.tmpl.html", map[string]interface{}{
-			"Error": "Invalid credentials",
-		})
+		app.sessionManager.Put(c.Request().Context(), "flash", "Login failed. Please check your username and password and try again.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusUnauthorized, "login.tmpl.html", data)
 	}
 
-	app.sessionManager.Put(c.Request().Context(), "authenticated", "true")
-	app.sessionManager.Put(c.Request().Context(), "flash", "logged in successfully")
+	app.sessionManager.Put(c.Request().Context(), "authenticated", true)
+	app.sessionManager.Put(c.Request().Context(), "flash", "Logged in successfully")
 
 	c.Set("user", user)
 
-	return c.Redirect(http.StatusSeeOther, "/")
-
+	data := app.newTemplateData(c)
+	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
 func (app *application) handleJSONLogin(c echo.Context) error {
@@ -166,6 +184,18 @@ func (app *application) listUsersHandler(c echo.Context) error {
 // loginHandler handles the display of the login form.
 func (app *application) loginHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "login.tmpl.html", nil)
+}
+
+func (app *application) logoutHandler(c echo.Context) error {
+	err := app.sessionManager.RenewToken(c.Request().Context())
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "home.tmpl.html", app.newTemplateData(c))
+	}
+
+	app.sessionManager.Remove(c.Request().Context(), "authenticated")
+	c.Set("user", nil)
+	app.sessionManager.Put(c.Request().Context(), "flash", "You've been logged out successfully!")
+	return c.Render(http.StatusOK, "home.tmpl.html", app.newTemplateData(c))
 }
 
 //func (app *application) updateUserHandler(c echo.Context) error {

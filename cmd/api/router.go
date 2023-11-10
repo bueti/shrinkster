@@ -37,9 +37,6 @@ func (app *application) registerRoutes() {
 	// static pages
 	app.echo.GET("/", app.indexHandler)
 	app.echo.GET("/about", app.aboutHandler)
-	app.echo.GET("/signup", app.signupHandler)
-	app.echo.GET("/login", app.loginHandler)
-	//app.echo.GET("/logout", app.logoutHandler)
 
 	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
@@ -48,6 +45,9 @@ func (app *application) registerRoutes() {
 	// user
 	app.echo.GET("/users", app.listUsersHandler, app.authenticate, app.requireRole("admin"))
 	app.echo.GET("/users/:id", app.getUserHandler, app.authenticate)
+	app.echo.GET("/signup", app.signupHandler)
+	app.echo.GET("/login", app.loginHandler)
+	app.echo.POST("/logout", app.logoutHandler)
 	//app.echo.PUT("/users/:id", app.updateUserHandler)
 	//app.echo.DELETE("/users/:id", app.deleteUserHandler)
 	app.echo.POST("/signup", app.createUserHandler)

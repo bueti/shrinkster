@@ -6,8 +6,16 @@
         <a href="/about" class="text-base font-semibold hover:underline ml-4">About</a>
     </div>
     <div class="flex items-center mr-4">
+        {{if .IsAuthenticated}}
+        <a href="/dashboard" class="mr-4">Dashboard</a>
+        <form action="/logout" method="POST">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <button>Logout</button>
+        </form>
+        {{else}}
         <a href="/login" class="text-base font-semibold hover:underline mr-4">Login</a>
         <a href="/signup" class="text-base font-semibold hover:underline">Sign Up</a>
+        {{end}}
     </div>
 </nav>
 {{end}}

@@ -7,14 +7,14 @@ import (
 )
 
 func (app *application) indexHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "home.tmpl.html", nil)
+	return c.Render(http.StatusOK, "home.tmpl.html", app.newTemplateData(c))
 }
 
 func (app *application) aboutHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "about.tmpl.html", nil)
+	return c.Render(http.StatusOK, "about.tmpl.html", app.newTemplateData(c))
 }
 
 // signupHandler handles the display of the signup form.
 func (app *application) signupHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "signup.tmpl.html", nil)
+	return c.Render(http.StatusOK, "signup.tmpl.html", app.newTemplateData(c))
 }

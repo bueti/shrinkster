@@ -8,9 +8,21 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bueti/shrinkster/internal/model"
 	"github.com/bueti/shrinkster/ui"
 	"github.com/labstack/echo/v4"
 )
+
+type templateData struct {
+	CurrentYear     int
+	Url             *model.Url
+	URLs            []*model.Url
+	Form            any
+	Flash           string
+	IsAuthenticated bool
+	CSRFToken       string
+	User            *model.User
+}
 
 type Template struct {
 	templates map[string]*template.Template

@@ -11,6 +11,7 @@
     Shrinkster is a link shortening service that allows you to shrink any link to a more manageable size. We
     also provide analytics on your links so you can see how many people are clicking on them.
 </p>
+{{if not .IsAuthenticated}}
 <div class="mt-6">
     <a href="/login"
        class="inline-block px-5 py-3 mt-8 font-medium text-white bg-indigo-600 rounded-md shadow-lg hover:bg-indigo-700">
@@ -21,4 +22,5 @@
         Sign Up
     </a>
 </div>
+{{end}}
 {{end}}
