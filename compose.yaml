@@ -8,6 +8,8 @@ services:
     environment:
       DSN: ${DSN}
       SIGNING_KEY: ${SIGNING_KEY}
+      TLS_CERT: ${TLS_CERT}
+      TLS_KEY: ${TLS_KEY}
     depends_on:
       db:
         condition: service_healthy

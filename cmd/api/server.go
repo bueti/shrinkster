@@ -12,8 +12,12 @@ import (
 func (app *application) serve() error {
 	// Start server
 	go func() {
+		// Retrieve TLS key and certificate content from environment variables
+		tlsKeyContent := os.Getenv("TLS_KEY")
+		tlsCertContent := os.Getenv("TLS_CERT")
+
 		addr := fmt.Sprintf(":%d", app.config.port)
-		if err := app.echo.Start(addr); err != nil && err != http.ErrServerClosed {
+		if err := app.echo.StartTLS(addr, []byte(tlsCertContent), []byte(tlsKeyContent)); err != nil && err != http.ErrServerClosed {
 			app.echo.Logger.Fatal("shutting down the server. error = %v", err)
 		}
 	}()

@@ -6,14 +6,11 @@ import (
 	"github.com/bueti/shrinkster/ui"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
 	"github.com/spazzymoto/echo-scs-session"
 )
 
 func (app *application) initEcho() *echo.Echo {
 	e := echo.New()
-	e.Debug = true
-	e.Logger.SetLevel(log.DEBUG)
 
 	e.Renderer = &Template{
 		templates: app.initTemplate(),
