@@ -2,3 +2,4 @@
 .idea/
 password.txt
 **/node_modules
+*.pem
