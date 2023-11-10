@@ -54,6 +54,7 @@ func (app *application) registerRoutes() {
 	app.echo.POST("/signup", app.createUserHandler)
 	app.echo.POST("/login", app.loginUserHandler)
 	// url
+	app.echo.GET("/urls/new", app.createUrFormlHandler, app.authenticate)
 	app.echo.POST("/urls", app.createUrlHandler, app.authenticate)
 	app.echo.POST("/urls/:id", app.deleteUrlHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate, app.mustBeOwner)

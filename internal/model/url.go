@@ -28,7 +28,7 @@ type Url struct {
 type UrlCreateRequest struct {
 	Original  string    `json:"original" validate:"required,url"`
 	ShortCode string    `json:"short_code" validate:"omitempty,alphanum,min=3,max=11"`
-	UserId    uuid.UUID `json:"user_id"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 type UrlResponse struct {
@@ -52,7 +52,7 @@ type UrlByUserResponse struct {
 func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	url := new(Url)
 
-	if urlReq.UserId == uuid.Nil {
+	if urlReq.UserID == uuid.Nil {
 		return Url{}, fmt.Errorf("user id is required")
 	}
 
@@ -67,7 +67,7 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	}
 
 	url.Original = urlReq.Original
-	url.UserID = urlReq.UserId
+	url.UserID = urlReq.UserID
 
 	result := u.DB.Create(url)
 	if result.Error != nil {

@@ -21,7 +21,50 @@ func (app *application) redirectUrlHandler(c echo.Context) error {
 	return c.Redirect(http.StatusPermanentRedirect, url.Original)
 }
 
+func (app *application) createUrFormlHandler(c echo.Context) error {
+	data := app.newTemplateData(c)
+	user, _ := app.userFromContext(c)
+	data.User = user
+	return c.Render(http.StatusOK, "create_url.tmpl.html", data)
+}
+
 func (app *application) createUrlHandler(c echo.Context) error {
+	contentType := c.Request().Header.Get(echo.HeaderContentType)
+	switch contentType {
+	case echo.MIMEApplicationJSON:
+		return app.handleJSONCreateUrl(c)
+	case echo.MIMEApplicationForm:
+		return app.handleFormCreateUrl(c)
+	default:
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
+	}
+}
+
+func (app *application) handleFormCreateUrl(c echo.Context) error {
+	original := c.FormValue("original")
+	short_code := c.FormValue("short_code")
+	user, err := app.userFromContext(c)
+	if err != nil {
+		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
+	}
+
+	urlReq := &model.UrlCreateRequest{
+		Original:  original,
+		ShortCode: short_code,
+		UserID:    user.ID,
+	}
+	_, err = app.models.Urls.Create(urlReq)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	app.sessionManager.Put(c.Request().Context(), "flash", "Url created successfully!")
+	data := app.newTemplateData(c)
+	data.User = user
+	return c.Render(http.StatusCreated, "create_url.tmpl.html", data)
+}
+
+func (app *application) handleJSONCreateUrl(c echo.Context) error {
 	urlReq := new(model.UrlCreateRequest)
 	if err := c.Bind(urlReq); err != nil {
 		return err
