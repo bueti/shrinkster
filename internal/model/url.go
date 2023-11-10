@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -51,6 +52,9 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 		return Url{}, fmt.Errorf("user id is required")
 	}
 
+	if strings.Contains(urlReq.Original, "shrink.ch/s/") {
+		return Url{}, fmt.Errorf("url cannot start with shrink.ch/s/")
+	}
 	if urlReq.ShortCode != "" {
 		url.ShortUrl = urlReq.ShortCode
 	} else {
