@@ -12,6 +12,38 @@ import (
 )
 
 func (app *application) createUserHandler(c echo.Context) error {
+	contentType := c.Request().Header.Get(echo.HeaderContentType)
+	switch contentType {
+	case echo.MIMEApplicationJSON:
+		return app.handleJSONSignup(c)
+	case echo.MIMEApplicationForm:
+		return app.handleFormSignup(c)
+	default:
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
+	}
+}
+
+func (app *application) handleFormSignup(c echo.Context) error {
+	user, err := app.models.Users.Register(&model.UserRegisterReq{
+		Name:            c.FormValue("name"),
+		Email:           c.FormValue("email"),
+		Password:        c.FormValue("password"),
+		PasswordConfirm: c.FormValue("password_confirm"),
+	})
+	if err != nil {
+		return c.Render(http.StatusBadRequest, "signup.tmpl.html", map[string]interface{}{
+			"Error": err.Error(),
+		})
+	}
+
+	app.sessionManager.Put(c.Request().Context(), "authenticated", "true")
+	app.sessionManager.Put(c.Request().Context(), "flash", "registered successfully")
+	c.Set("user", user)
+
+	return c.Redirect(http.StatusSeeOther, "/")
+}
+
+func (app *application) handleJSONSignup(c echo.Context) error {
 	var body model.UserRegisterReq
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -36,16 +68,15 @@ func (app *application) loginUserHandler(c echo.Context) error {
 	contentType := c.Request().Header.Get(echo.HeaderContentType)
 	switch contentType {
 	case echo.MIMEApplicationJSON:
-		return app.handleJSONRequest(c)
+		return app.handleJSONLogin(c)
 	case echo.MIMEApplicationForm:
-		return app.handleFormURLEncodedRequest(c)
+		return app.handleFormLogin(c)
 	default:
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
 	}
-
 }
 
-func (app *application) handleFormURLEncodedRequest(c echo.Context) error {
+func (app *application) handleFormLogin(c echo.Context) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 
@@ -57,13 +88,15 @@ func (app *application) handleFormURLEncodedRequest(c echo.Context) error {
 	}
 
 	app.sessionManager.Put(c.Request().Context(), "authenticated", "true")
+	app.sessionManager.Put(c.Request().Context(), "flash", "logged in successfully")
+
 	c.Set("user", user)
 
 	return c.Redirect(http.StatusSeeOther, "/")
 
 }
 
-func (app *application) handleJSONRequest(c echo.Context) error {
+func (app *application) handleJSONLogin(c echo.Context) error {
 	var body model.UserLoginRequest
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)

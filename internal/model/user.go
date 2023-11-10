@@ -64,12 +64,14 @@ func (u *UserModel) Login(email, password string) (*User, error) {
 func (u *UserModel) Register(body *UserRegisterReq) (UserResponse, error) {
 	emailRX := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !emailRX.MatchString(body.Email) {
-		//return c.JSON(http.StatusBadRequest, "invalid email address")
 		return UserResponse{}, fmt.Errorf("invalid email address")
 	}
 
+	if len(body.Password) < 8 || len(body.Password) > 72 {
+		return UserResponse{}, fmt.Errorf("password must be between 8 and 72 characters")
+	}
+
 	if body.Password != body.PasswordConfirm {
-		//return c.JSON(http.StatusBadRequest, "passwords do not match")
 		return UserResponse{}, fmt.Errorf("passwords do not match")
 	}
 
