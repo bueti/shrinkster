@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/alexedwards/scs/postgresstore v0.0.0-20231022164606-84bd122bd881
 	github.com/alexedwards/scs/v2 v2.6.0
+	github.com/go-mail/mail/v2 v2.3.0
 	github.com/google/uuid v1.4.0
 	github.com/labstack/echo/v4 v4.11.2
 	github.com/labstack/gommon v0.4.0
@@ -30,4 +31,6 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/mail.v2 v2.3.1 // indirect
 )

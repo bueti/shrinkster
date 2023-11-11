@@ -46,6 +46,7 @@ func (app *application) registerRoutes() {
 	// user
 	app.echo.GET("/users", app.listUsersHandler, app.authenticate, app.requireRole("admin"))
 	app.echo.GET("/users/:id", app.getUserHandler, app.authenticate)
+	app.echo.GET("/users/activate", app.activateUserHandler)
 	app.echo.GET("/signup", app.signupHandler)
 	app.echo.GET("/login", app.loginHandler)
 	app.echo.POST("/logout", app.logoutHandler)

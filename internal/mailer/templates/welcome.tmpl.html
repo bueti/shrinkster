@@ -1,0 +1,43 @@
+{{define "subject"}}Welcome to Shrink.ch!{{end}}
+
+{{define "plainBody"}}
+Hi,
+
+Thanks for signing up for a Shrink.ch account. We're excited to have you on board!
+
+For future reference, your user ID number is {{.userID}}.
+
+Please click on the following link to activate your account:
+
+https://shrink.ch/users/activate?token={{.activationToken}}
+
+Please note that this is a one-time use token, and it will expire in 3 days.
+
+Thanks,
+
+The Shrink Team
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<p>Hi,</p>
+<p>Thanks for signing up for a Shrink account. We're excited to have you on board!</p>
+<p>For future reference, your user ID number is {{.userID}}.</p>
+<p>Please click the following link to activate your account:</p>
+<p><a href="https://shrink.ch/users/activate?token={{.activationToken}}">https://shrink.ch/users/activate?token={{.activationToken}}</a></p>
+
+<p>Please note that this is a one-time use token, and it will expire in 3 days.</p>
+<p>Thanks,</p>
+<p>The Shrink Team</p>
+</body>
+
+</html>
+{{end}}

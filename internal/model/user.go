@@ -16,11 +16,12 @@ type UserModel struct {
 
 type User struct {
 	gorm.Model
-	ID       uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key"`
-	Name     string    `gorm:"type:varchar(255)"`
-	Email    string    `gorm:"not null;uniqueIndex"`
-	Password string    `gorm:"not null"`
-	Role     string    `gorm:"default:'user'"`
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key"`
+	Name      string    `gorm:"type:varchar(255)"`
+	Email     string    `gorm:"not null;uniqueIndex"`
+	Password  string    `gorm:"not null"`
+	Role      string    `gorm:"default:'user'"`
+	Activated bool      `gorm:"default:false"`
 }
 
 type UserRegisterReq struct {
@@ -83,6 +84,15 @@ func (u *UserModel) Register(body *UserRegisterReq) (UserResponse, error) {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, nil
+}
+
+// Activate sets the activated flag to true for a user.
+func (u *UserModel) Activate(id uuid.UUID) error {
+	result := u.DB.Model(&User{}).Where("id = ?", id).Update("activated", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
 func (u *UserModel) List() ([]User, error) {

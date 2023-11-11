@@ -8,6 +8,7 @@ import (
 	"github.com/bueti/shrinkster/internal/model"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/pascaldekloe/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -46,7 +47,7 @@ func (app *application) handleFormSignup(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", app.newTemplateData(c))
 	}
 
-	_, err := app.models.Users.Register(&model.UserRegisterReq{
+	user, err := app.models.Users.Register(&model.UserRegisterReq{
 		Name:     name,
 		Email:    email,
 		Password: password,
@@ -56,6 +57,27 @@ func (app *application) handleFormSignup(c echo.Context) error {
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
 	}
+
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, model.ScopeActivation)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Internal Server Error. Please try again later.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
+	}
+
+	// Launch a goroutine which runs an anonymous function that sends the welcome email.
+
+	go func() {
+		data := map[string]any{
+			"activationToken": token.Plaintext,
+			"userID":          user.ID,
+		}
+
+		err = app.mailer.Send(user.Email, "welcome.tmpl.html", data)
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "Your signup was successful. Please log in.")
 	return c.Redirect(http.StatusSeeOther, "/login")
@@ -170,6 +192,30 @@ func (app *application) getUserHandler(c echo.Context) error {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	})
+}
+
+// activateUserHandler handles the activation of a user.
+func (app *application) activateUserHandler(c echo.Context) error {
+	token := c.QueryParam("token")
+	err := model.ValidateTokenPlaintext(token)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	user, err := app.models.Tokens.GetUser(model.ScopeActivation, token)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash", "Invalid token or token expired.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
+	}
+
+	err = app.models.Users.Activate(user.ID)
+	if err != nil {
+		return c.Render(http.StatusInternalServerError, "home.tmpl.html", app.newTemplateData(c))
+	}
+	app.sessionManager.Put(c.Request().Context(), "flash", "Your account has been activated successfully. Please log in.")
+	data := app.newTemplateData(c)
+	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
 func (app *application) listUsersHandler(c echo.Context) error {
