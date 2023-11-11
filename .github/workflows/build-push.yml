@@ -15,6 +15,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -52,4 +56,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: bueti/shrinkster:${GITHUB_SHA::7}
+          tags: bueti/shrinkster:${{ steps.vars.outputs.sha_short }}
