@@ -1,5 +1,6 @@
 services:
   server:
+    image: bueti/shrinkster:${TAG}
     build:
       context: .
       target: final
@@ -10,6 +11,7 @@ services:
       SIGNING_KEY: ${SIGNING_KEY}
       TLS_CERT: ${TLS_CERT}
       TLS_KEY: ${TLS_KEY}
+      TAG: ${TAG}
     depends_on:
       db:
         condition: service_healthy
