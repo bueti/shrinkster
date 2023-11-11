@@ -90,5 +90,5 @@ jobs:
           script: |
             cd shrinkster
             export TAG=$(grep SHA_SHORT .env | cut -d '=' -f2)
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
