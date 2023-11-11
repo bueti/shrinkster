@@ -52,4 +52,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: bueti/shrinkster:$(git rev-parse --short HEAD)
+          tags: bueti/shrinkster:${GITHUB_SHA::7}
