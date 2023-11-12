@@ -33,17 +33,17 @@ func (app *application) handleFormSignup(c echo.Context) error {
 
 	emailRX := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !emailRX.MatchString(email) {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Invalid email address.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Invalid email address.")
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
 	if len(password) < 8 || len(password) > 72 {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Password must be between 8 and 72 characters long.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Password must be between 8 and 72 characters long.")
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", app.newTemplateData(c))
 	}
 
 	if password != passwordConfirm {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Password does not match.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Password does not match.")
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", app.newTemplateData(c))
 	}
 
@@ -53,14 +53,14 @@ func (app *application) handleFormSignup(c echo.Context) error {
 		Password: password,
 	})
 	if err != nil {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Internal Server Error. Please try again later.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
 	}
 
 	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, model.ScopeActivation)
 	if err != nil {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Internal Server Error. Please try again later.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
 	}
@@ -122,7 +122,7 @@ func (app *application) handleFormLogin(c echo.Context) error {
 
 	user, err := app.models.Users.Login(email, password)
 	if err != nil {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Login failed. Please check your username and password and try again.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Login failed. Please check your username and password and try again.")
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusUnauthorized, "login.tmpl.html", data)
 	}
@@ -204,7 +204,7 @@ func (app *application) activateUserHandler(c echo.Context) error {
 
 	user, err := app.models.Tokens.GetUser(model.ScopeActivation, token)
 	if err != nil {
-		app.sessionManager.Put(c.Request().Context(), "flash", "Invalid token or token expired.")
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Invalid token or token expired.")
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
 	}

@@ -41,21 +41,21 @@ func (app *application) registerRoutes() {
 	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
 
-	// API routes
+	// dashboard
 	app.echo.GET("dashboard", app.dashboardHandler, app.authenticate)
+
 	// user
 	app.echo.GET("/users", app.listUsersHandler, app.authenticate, app.requireRole("admin"))
 	app.echo.GET("/users/:id", app.getUserHandler, app.authenticate)
 	app.echo.GET("/users/activate", app.activateUserHandler)
 	app.echo.GET("/signup", app.signupHandler)
-	app.echo.GET("/login", app.loginHandler)
-	app.echo.POST("/logout", app.logoutHandler)
-	//app.echo.PUT("/users/:id", app.updateUserHandler)
-	//app.echo.DELETE("/users/:id", app.deleteUserHandler)
 	app.echo.POST("/signup", app.createUserHandler)
+	app.echo.GET("/login", app.loginHandler)
 	app.echo.POST("/login", app.loginUserHandler)
+	app.echo.POST("/logout", app.logoutHandler)
+
 	// url
-	app.echo.GET("/urls/new", app.createUrFormlHandler, app.authenticate)
+	app.echo.GET("/urls/new", app.createUrlFormHandler, app.authenticate)
 	app.echo.POST("/urls", app.createUrlHandler, app.authenticate)
 	app.echo.POST("/urls/:id", app.deleteUrlHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate, app.mustBeOwner)

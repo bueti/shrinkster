@@ -19,6 +19,7 @@ type templateData struct {
 	Urls            []*model.Url
 	Form            any
 	Flash           string
+	FlashError      string
 	IsAuthenticated bool
 	CSRFToken       string
 	User            *model.User

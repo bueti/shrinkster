@@ -21,7 +21,7 @@ func (app *application) redirectUrlHandler(c echo.Context) error {
 	return c.Redirect(http.StatusPermanentRedirect, url.Original)
 }
 
-func (app *application) createUrFormlHandler(c echo.Context) error {
+func (app *application) createUrlFormHandler(c echo.Context) error {
 	data := app.newTemplateData(c)
 	user, _ := app.userFromContext(c)
 	data.User = user
@@ -42,20 +42,22 @@ func (app *application) createUrlHandler(c echo.Context) error {
 
 func (app *application) handleFormCreateUrl(c echo.Context) error {
 	original := c.FormValue("original")
-	short_code := c.FormValue("short_code")
+	shortCode := c.FormValue("short_code")
 	user, err := app.userFromContext(c)
 	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request, are you logged in?")
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
 	urlReq := &model.UrlCreateRequest{
 		Original:  original,
-		ShortCode: short_code,
+		ShortCode: shortCode,
 		UserID:    user.ID,
 	}
 	_, err = app.models.Urls.Create(urlReq)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
+		return c.Render(http.StatusBadRequest, "create_url.tmpl.html", app.newTemplateData(c))
 	}
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "Url created successfully!")
@@ -100,7 +102,8 @@ func (app *application) getUrlByUserHandler(c echo.Context) error {
 func (app *application) deleteUrlHandler(c echo.Context) error {
 	urlUUID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request?!")
+		return c.Render(http.StatusBadRequest, "dashboard.tmpl.html", app.newTemplateData(c))
 	}
 
 	err = app.models.Urls.Delete(urlUUID)

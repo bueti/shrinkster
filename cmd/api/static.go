@@ -26,12 +26,14 @@ func (app *application) signupHandler(c echo.Context) error {
 func (app *application) dashboardHandler(c echo.Context) error {
 	user, err := app.userFromContext(c)
 	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request, are you logged in?")
 		return c.Render(http.StatusInternalServerError, "home.tmpl.html", app.newTemplateData(c))
 	}
 
 	data := app.newTemplateData(c)
 	urlsResp, err := app.models.Urls.GetUrlByUser(user.ID)
 	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
 		return c.Render(http.StatusInternalServerError, "dashboard.tmpl.html", data)
 	}
 	var urls []*model.Url
