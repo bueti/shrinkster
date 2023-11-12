@@ -25,7 +25,10 @@ func (app *application) registerMiddleware() {
 	app.echo.Use(middleware.Gzip())
 	app.echo.Use(middleware.CORS())
 	app.echo.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		TokenLookup: "form:csrf_token",
+		TokenLookup:    "form:csrf_token",
+		CookieSecure:   true,
+		CookieHTTPOnly: true,
+		CookieSameSite: http.SameSiteStrictMode,
 	}))
 	app.echo.Use(middleware.Secure())
 	app.echo.Use(middleware.BodyLimit("1M"))
