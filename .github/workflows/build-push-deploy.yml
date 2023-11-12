@@ -6,6 +6,8 @@ on:
       - main
     paths-ignore:
       - '**README.md'
+      - 'LICENSE'
+      - 'docs/**'
 
 jobs:
   build:
@@ -87,7 +89,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: ".env"
+          source: ".env,compose.yaml"
           target: "/home/ubuntu/shrinkster"
 
       - name: Deploy to Server
