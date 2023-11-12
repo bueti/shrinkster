@@ -6,17 +6,49 @@
         <a href="/about" class="text-base font-semibold hover:underline ml-4">About</a>
     </div>
     <div class="flex items-center mr-4">
-        {{if .IsAuthenticated}}
-        <a href="/urls/new" class="mr-4">Create URL</a>
-        <a href="/dashboard" class="mr-4">Dashboard</a>
-        <form action="/logout" method="POST">
-            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-            <button>Logout</button>
-        </form>
-        {{else}}
-        <a href="/login" class="text-base font-semibold hover:underline mr-4">Login</a>
-        <a href="/signup" class="text-base font-semibold hover:underline">Sign Up</a>
-        {{end}}
+        <div class="lg:hidden">
+            <!-- Hamburger menu button for smaller screens -->
+            <button id="menu-toggle" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="hidden lg:flex items-center">
+            {{if .IsAuthenticated}}
+            <a href="/urls/new" class="mr-4">Create URL</a>
+            <a href="/dashboard" class="mr-4">Dashboard</a>
+            <form action="/logout" method="POST">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <button>Logout</button>
+            </form>
+            {{else}}
+            <a href="/login" class="text-base font-semibold hover:underline mr-4">Login</a>
+            <a href="/signup" class="text-base font-semibold hover:underline">Sign Up</a>
+            {{end}}
+        </div>
     </div>
 </nav>
+
+<!-- Mobile menu for smaller screens -->
+<div id="mobile-menu" class="lg:hidden hidden">
+    {{if .IsAuthenticated}}
+    <a href="/urls/new" class="block py-2 px-4 text-sm text-gray-700">Create URL</a>
+    <a href="/dashboard" class="block py-2 px-4 text-sm text-gray-700">Dashboard</a>
+    <form action="/logout" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <button class="block py-2 px-4 text-sm text-gray-700">Logout</button>
+    </form>
+    {{else}}
+    <a href="/login" class="block py-2 px-4 text-sm text-gray-700">Login</a>
+    <a href="/signup" class="block py-2 px-4 text-sm text-gray-700">Sign Up</a>
+    {{end}}
+</div>
+
+<!-- JavaScript to toggle the mobile menu visibility -->
+<script>
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+</script>
 {{end}}
