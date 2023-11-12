@@ -5,6 +5,7 @@
 <h2 class="text-2xl font-bold text-gray-900">Create URL</h2>
 <p class="mt-4 text-gray-600">Please enter your information below to create a new URL.</p>
 <form class="mt-8" action="/urls" method="post">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div class="flex flex-col">
         <label for="original" class="hidden">URL</label>
         <input type="url" name="original" id="original" placeholder="Long URL"

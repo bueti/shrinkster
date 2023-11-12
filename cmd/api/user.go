@@ -79,7 +79,7 @@ func (app *application) handleFormSignup(c echo.Context) error {
 		}
 	}()
 
-	app.sessionManager.Put(c.Request().Context(), "flash", "Your signup was successful. Please log in.")
+	app.sessionManager.Put(c.Request().Context(), "flash", "Your signup was successful. Please check your mailbox for the account activation link.")
 	return c.Redirect(http.StatusSeeOther, "/login")
 }
 
@@ -228,7 +228,7 @@ func (app *application) listUsersHandler(c echo.Context) error {
 
 // loginHandler handles the display of the login form.
 func (app *application) loginHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "login.tmpl.html", nil)
+	return c.Render(http.StatusOK, "login.tmpl.html", app.newTemplateData(c))
 }
 
 // logoutHandler handles the logout of a user.

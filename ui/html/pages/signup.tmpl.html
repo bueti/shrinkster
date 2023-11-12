@@ -4,6 +4,7 @@
 <h2 class="text-2xl font-bold text-gray-900">Sign Up</h2>
 <p class="mt-4 text-gray-600">Please enter your information below to sign up.</p>
 <form class="mt-8" action="/signup" method="post">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div class="flex flex-col">
         <label for="name" class="hidden">Name</label>
         <input type="text" name="name" id="name" placeholder="Display Name"

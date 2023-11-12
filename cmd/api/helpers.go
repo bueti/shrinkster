@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func (app *application) isAuthenticated(c echo.Context) bool {
@@ -16,5 +17,6 @@ func (app *application) newTemplateData(c echo.Context) *templateData {
 		Flash:           app.sessionManager.PopString(c.Request().Context(), "flash"),
 		FlashError:      app.sessionManager.PopString(c.Request().Context(), "flash_error"),
 		IsAuthenticated: app.isAuthenticated(c),
+		CSRFToken:       c.Get(middleware.DefaultCSRFConfig.ContextKey).(string),
 	}
 }
