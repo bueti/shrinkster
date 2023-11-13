@@ -126,6 +126,11 @@ func (app *application) handleFormLogin(c echo.Context) error {
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusUnauthorized, "login.tmpl.html", data)
 	}
+	if !user.Activated {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Your user account has not been activated. Please check your mailbox for the activation link.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusUnauthorized, "login.tmpl.html", data)
+	}
 	userID := user.ID.String()
 	app.sessionManager.Put(c.Request().Context(), "authenticated", true)
 	app.sessionManager.Put(c.Request().Context(), "userID", userID)
