@@ -85,14 +85,14 @@ func (m TokenModel) DeleteAllForUser(scope string, userID uuid.UUID) error {
 	return nil
 }
 
-// GetUser returns a user for a given token.
-func (m TokenModel) GetUser(scope, token string) (*User, error) {
+// GetUserID returns a user for a given token.
+func (m TokenModel) GetUserID(scope, token string) (uuid.UUID, error) {
 	tokenObj := new(Token)
 	tokenHash := sha256.Sum256([]byte(token))
 	result := m.DB.Where("scope = ? AND hash = ?", scope, tokenHash[:]).First(&tokenObj)
 	if result.Error != nil {
-		return nil, result.Error
+		return uuid.UUID{}, result.Error
 	}
 
-	return &tokenObj.User, nil
+	return tokenObj.UserID, nil
 }

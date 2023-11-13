@@ -207,14 +207,14 @@ func (app *application) activateUserHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	user, err := app.models.Tokens.GetUser(model.ScopeActivation, token)
+	userID, err := app.models.Tokens.GetUserID(model.ScopeActivation, token)
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Invalid token or token expired.")
 		data := app.newTemplateData(c)
 		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
 	}
 
-	err = app.models.Users.Activate(user.ID)
+	err = app.models.Users.Activate(userID)
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "home.tmpl.html", app.newTemplateData(c))
 	}
