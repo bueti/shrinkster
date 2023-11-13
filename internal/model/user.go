@@ -88,7 +88,7 @@ func (u *UserModel) Register(body *UserRegisterReq) (UserResponse, error) {
 
 // Activate sets the activated flag to true for a user.
 func (u *UserModel) Activate(id uuid.UUID) error {
-	result := u.DB.Model(&User{}).Where("id = ?", id).Update("activated", true)
+	result := u.DB.Where("id = ?", id).Update("activated", true)
 	if result.Error != nil {
 		return result.Error
 	}
