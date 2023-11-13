@@ -115,7 +115,7 @@ func (app *application) deleteUrlHandler(c echo.Context) error {
 	data := app.newTemplateData(c)
 	user, _ := app.userFromContext(c)
 	data.User = user
-	return c.Render(http.StatusCreated, "dashboard.tmpl.html", data)
+	return app.dashboardHandler(c)
 }
 
 // genFullUrl generates the full url for a given short url
