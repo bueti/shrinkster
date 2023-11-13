@@ -103,7 +103,7 @@ func (app *application) deleteUrlHandler(c echo.Context) error {
 	urlUUID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request?!")
-		return c.Render(http.StatusBadRequest, "dashboard.tmpl.html", app.newTemplateData(c))
+		return app.dashboardHandler(c)
 	}
 
 	err = app.models.Urls.Delete(urlUUID)

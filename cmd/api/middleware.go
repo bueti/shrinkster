@@ -12,48 +12,57 @@ import (
 
 func (app *application) authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if app.isAuthenticated(c) {
-			return next(c)
+		if c.Request().Header.Get(echo.HeaderContentType) == echo.MIMEApplicationJSON {
+			return app.jsonAuthenticate(c, next)
 		}
-		authorizationHeader := c.Request().Header.Get("Authorization")
-		if authorizationHeader == "" {
-			return c.JSON(http.StatusUnauthorized, "Unauthorized")
+		if !app.isAuthenticated(c) {
+			return c.Render(http.StatusUnauthorized, "login.tmpl.html", app.newTemplateData(c))
 		}
-
-		headerParts := strings.Split(authorizationHeader, " ")
-		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			return c.JSON(http.StatusBadRequest, "Bad Request")
-		}
-
-		token := headerParts[1]
-		claims, err := jwt.HMACCheck([]byte(token), []byte(app.config.signingKey))
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-		if !claims.Valid(time.Now()) {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-		if claims.Issuer != "shrink.ch" {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-		if !claims.AcceptAudience("shrink.ch") {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-
-		userID, err := uuid.Parse(claims.Subject)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-
-		user, err := app.models.Users.GetByID(userID)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, "Invalid Token")
-		}
-
-		c.Set("user", user)
-
+		c.Request().Header.Set("Cache-Control", "no-store")
 		return next(c)
+
 	}
+}
+
+func (app *application) jsonAuthenticate(c echo.Context, next echo.HandlerFunc) error {
+	authorizationHeader := c.Request().Header.Get("Authorization")
+	if authorizationHeader == "" {
+		return c.JSON(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	headerParts := strings.Split(authorizationHeader, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		return c.JSON(http.StatusBadRequest, "Bad Request")
+	}
+
+	token := headerParts[1]
+	claims, err := jwt.HMACCheck([]byte(token), []byte(app.config.signingKey))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+	if !claims.Valid(time.Now()) {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+	if claims.Issuer != "shrink.ch" {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+	if !claims.AcceptAudience("shrink.ch") {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+
+	user, err := app.models.Users.GetByID(userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Token")
+	}
+
+	c.Set("user", user)
+
+	return next(c)
 }
 
 func (app *application) requireRole(role string) echo.MiddlewareFunc {
