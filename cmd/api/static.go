@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bueti/shrinkster/internal/model"
+	"github.com/bueti/shrinkster/ui"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -20,6 +21,19 @@ func (app *application) aboutHandler(c echo.Context) error {
 // signupHandler handles the display of the signup form.
 func (app *application) signupHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "signup.tmpl.html", app.newTemplateData(c))
+}
+
+// securityTxtHandler handles the display of the security.txt file.
+func (app *application) securityTxtHandler(c echo.Context) error {
+	// Read the content of the embedded security.txt file
+	content, err := ui.Files.ReadFile("static/security.txt")
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
+
+	return c.String(http.StatusOK, string(content))
 }
 
 // dashboardHandler handles the display of the dashboard page.

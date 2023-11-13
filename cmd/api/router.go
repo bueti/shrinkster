@@ -46,6 +46,7 @@ func (app *application) registerRoutes() {
 
 	// healthcheck
 	app.echo.GET("/health", app.healthcheckHandler)
+	app.echo.GET("/.well-known/security.txt", app.securityTxtHandler)
 
 	// dashboard
 	app.echo.GET("dashboard", app.dashboardHandler, app.authenticate)

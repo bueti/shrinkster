@@ -1,0 +1,4 @@
+Contact: mailto:security@shrink.ch
+Expires: 2023-11-12T23:00:00.000Z
+Preferred-Languages: en, de
+Canonical: https://shrink.ch/.well-known/security.txt
