@@ -25,14 +25,11 @@ func (app *application) signupHandler(c echo.Context) error {
 
 // securityTxtHandler handles the display of the security.txt file.
 func (app *application) securityTxtHandler(c echo.Context) error {
-	// Read the content of the embedded security.txt file
 	content, err := ui.Files.ReadFile("static/security.txt")
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
-
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
-
 	return c.String(http.StatusOK, string(content))
 }
 

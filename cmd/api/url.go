@@ -63,7 +63,7 @@ func (app *application) handleFormCreateUrl(c echo.Context) error {
 	app.sessionManager.Put(c.Request().Context(), "flash", "Url created successfully!")
 	data := app.newTemplateData(c)
 	data.User = user
-	return c.Render(http.StatusCreated, "create_url.tmpl.html", data)
+	return app.dashboardHandler(c)
 }
 
 func (app *application) handleJSONCreateUrl(c echo.Context) error {
