@@ -1,5 +1,5 @@
 # Shrinkster
-<img align="right" src="https://github.com/bueti/shrinkster/assets/383917/bf96f7e6-2612-4ce3-a0fd-f10113d5486d">
+<img align="right" src="https://github.com/bueti/shrinkster/assets/383917/e65d7181-31a5-4da1-8d0c-d97e640cbd33">
 Shrinkster is a URL shortener project built with Go. The project is deployed to https://shrink.ch
 
 ## Setup
