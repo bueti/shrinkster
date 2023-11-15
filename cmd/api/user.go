@@ -223,6 +223,45 @@ func (app *application) activateUserHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
+// getResendActivationLinkHandler handles the display of the resend activation link form.
+func (app *application) getResendActivationLinkHandler(c echo.Context) error {
+	return c.Render(http.StatusOK, "resend_activation_link.tmpl.html", app.newTemplateData(c))
+}
+
+// postResendActivationLinkHandler handles the resending of an activation link.
+func (app *application) postResendActivationLinkHandler(c echo.Context) error {
+	email := c.FormValue("email")
+	user, err := app.models.Users.GetByEmail(email)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "No user exists with this email address.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
+	}
+
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, model.ScopeActivation)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
+		data := app.newTemplateData(c)
+		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
+	}
+
+	go func() {
+		data := map[string]any{
+			"activationToken": token.Plaintext,
+			"userID":          user.ID,
+		}
+
+		err = app.mailer.Send(user.Email, "welcome.tmpl.html", data)
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	app.sessionManager.Put(c.Request().Context(), "flash", "The activation link has been resent. Please check your mailbox.")
+	data := app.newTemplateData(c)
+	return c.Render(http.StatusOK, "home.tmpl.html", data)
+}
+
 func (app *application) listUsersHandler(c echo.Context) error {
 	users, err := app.models.Users.List()
 	if err != nil {

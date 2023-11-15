@@ -16,16 +16,20 @@
         <input type="password" name="password" id="password" placeholder="Password"
                class="px-4 py-3 rounded-lg shadow-lg focus:outline-none focus:shadow-outline"/>
     </div>
-    <!-- remember me button -->
+    <!-- remember me button
     <div class="flex items-center mt-4">
         <input type="checkbox" name="remember" id="remember" class="mr-2">
         <label for="remember" class="text-gray-600">Remember Me</label>
     </div>
-    <div class="mt-6">
+    -->
+    <div>
         <button type="submit"
                 class="px-5 py-3 mt-8 font-medium text-indigo-600 bg-white rounded-md shadow-lg hover:bg-indigo-50">
             Login
         </button>
+    </div>
+    <div class="flex items-center justify-between mt-4">
+        <a href="/users/resend-activation" class="text-xs text-gray-500 hover:underline">Resend Activation Token</a>
     </div>
 </form>
 {{template "twoGridFoot" .}}

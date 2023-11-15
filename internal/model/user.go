@@ -118,6 +118,16 @@ func (u *UserModel) GetByID(id uuid.UUID) (*User, error) {
 	return user, nil
 }
 
+// GetByEmail returns a user based on the email address.
+func (u *UserModel) GetByEmail(email string) (*User, error) {
+	user := new(User)
+	result := u.DB.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
+}
+
 func (u *UserModel) GetRole(c echo.Context) (string, error) {
 	user := c.Get("user").(*User)
 	return user.Role, nil
