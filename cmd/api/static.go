@@ -18,11 +18,6 @@ func (app *application) aboutHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "about.tmpl.html", app.newTemplateData(c))
 }
 
-// signupHandler handles the display of the signup form.
-func (app *application) signupHandler(c echo.Context) error {
-	return c.Render(http.StatusOK, "signup.tmpl.html", app.newTemplateData(c))
-}
-
 // securityTxtHandler handles the display of the security.txt file.
 func (app *application) securityTxtHandler(c echo.Context) error {
 	content, err := ui.Files.ReadFile("static/security.txt")

@@ -28,7 +28,7 @@ func (app *application) createUrlFormHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "create_url.tmpl.html", data)
 }
 
-func (app *application) createUrlHandler(c echo.Context) error {
+func (app *application) createUrlHandlerPost(c echo.Context) error {
 	contentType := c.Request().Header.Get(echo.HeaderContentType)
 	switch contentType {
 	case echo.MIMEApplicationJSON:
@@ -98,8 +98,8 @@ func (app *application) getUrlByUserHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, urls)
 }
 
-// deleteUrlHandler handles the deletion of a url.
-func (app *application) deleteUrlHandler(c echo.Context) error {
+// deleteUrlHandlerPost handles the deletion of a url.
+func (app *application) deleteUrlHandlerPost(c echo.Context) error {
 	urlUUID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request?!")

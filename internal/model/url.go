@@ -21,7 +21,7 @@ type Url struct {
 	Original string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
 	ShortUrl string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
 	UserID   uuid.UUID `gorm:"type:uuid" json:"user_id"`
-	User     User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	User     User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Visits   int       `gorm:"default:0" json:"visits"`
 }
 

@@ -13,7 +13,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (app *application) createUserHandler(c echo.Context) error {
+// signupHandler handles the display of the signup form.
+func (app *application) signupHandler(c echo.Context) error {
+	return c.Render(http.StatusOK, "signup.tmpl.html", app.newTemplateData(c))
+}
+
+func (app *application) signupHandlerPost(c echo.Context) error {
 	contentType := c.Request().Header.Get(echo.HeaderContentType)
 	switch contentType {
 	case echo.MIMEApplicationJSON:
@@ -31,7 +36,7 @@ func (app *application) handleFormSignup(c echo.Context) error {
 	password := c.FormValue("password")
 	passwordConfirm := c.FormValue("password_confirm")
 
-	emailRX := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	emailRX := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !emailRX.MatchString(email) {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Invalid email address.")
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
@@ -104,7 +109,7 @@ func (app *application) handleJSONSignup(c echo.Context) error {
 }
 
 // LoginUserHandler handles the login of a user
-func (app *application) loginUserHandler(c echo.Context) error {
+func (app *application) loginHandlerPost(c echo.Context) error {
 	contentType := c.Request().Header.Get(echo.HeaderContentType)
 	switch contentType {
 	case echo.MIMEApplicationJSON:
@@ -223,13 +228,13 @@ func (app *application) activateUserHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
-// getResendActivationLinkHandler handles the display of the resend activation link form.
-func (app *application) getResendActivationLinkHandler(c echo.Context) error {
+// resendActivationLinkHandler handles the display of the resend activation link form.
+func (app *application) resendActivationLinkHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "resend_activation_link.tmpl.html", app.newTemplateData(c))
 }
 
-// postResendActivationLinkHandler handles the resending of an activation link.
-func (app *application) postResendActivationLinkHandler(c echo.Context) error {
+// resendActivationLinkHandlerPost handles the resending of an activation link.
+func (app *application) resendActivationLinkHandlerPost(c echo.Context) error {
 	email := c.FormValue("email")
 	user, err := app.models.Users.GetByEmail(email)
 	if err != nil {
@@ -275,8 +280,8 @@ func (app *application) loginHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "login.tmpl.html", app.newTemplateData(c))
 }
 
-// logoutHandler handles the logout of a user.
-func (app *application) logoutHandler(c echo.Context) error {
+// logoutHandlerPost handles the logout of a user.
+func (app *application) logoutHandlerPost(c echo.Context) error {
 	err := app.sessionManager.RenewToken(c.Request().Context())
 	if err != nil {
 		return c.Render(http.StatusInternalServerError, "home.tmpl.html", app.newTemplateData(c))
@@ -287,34 +292,3 @@ func (app *application) logoutHandler(c echo.Context) error {
 	app.sessionManager.Put(c.Request().Context(), "flash", "You've been logged out successfully!")
 	return c.Render(http.StatusOK, "home.tmpl.html", app.newTemplateData(c))
 }
-
-//func (app *application) updateUserHandler(c echo.Context) error {
-//	user := new(model.User)
-//	id := c.Param("id")
-//	result := app.db.First(&user, id)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusInternalServerError, result.Error.Error())
-//	}
-//	if err := c.Bind(user); err != nil {
-//		return err
-//	}
-//	result = app.db.Save(&user)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusInternalServerError, result.Error.Error())
-//	}
-//	return c.JSON(http.StatusOK, user)
-//}
-//
-//func (app *application) deleteUserHandler(c echo.Context) error {
-//	user := new(model.User)
-//	id := c.Param("id")
-//	result := app.db.First(&user, id)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusInternalServerError, result.Error.Error())
-//	}
-//	result = app.db.Delete(&user)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusInternalServerError, result.Error.Error())
-//	}
-//	return c.JSON(http.StatusOK, user)
-//}
