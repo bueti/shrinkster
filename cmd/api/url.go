@@ -29,18 +29,6 @@ func (app *application) createUrlFormHandler(c echo.Context) error {
 }
 
 func (app *application) createUrlHandlerPost(c echo.Context) error {
-	contentType := c.Request().Header.Get(echo.HeaderContentType)
-	switch contentType {
-	case echo.MIMEApplicationJSON:
-		return app.handleJSONCreateUrl(c)
-	case echo.MIMEApplicationForm:
-		return app.handleFormCreateUrl(c)
-	default:
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
-	}
-}
-
-func (app *application) handleFormCreateUrl(c echo.Context) error {
 	original := c.FormValue("original")
 	shortCode := c.FormValue("short_code")
 	user, err := app.userFromContext(c)
@@ -66,7 +54,7 @@ func (app *application) handleFormCreateUrl(c echo.Context) error {
 	return app.dashboardHandler(c)
 }
 
-func (app *application) handleJSONCreateUrl(c echo.Context) error {
+func (app *application) createUrlHandlerJsonPost(c echo.Context) error {
 	urlReq := new(model.UrlCreateRequest)
 	if err := c.Bind(urlReq); err != nil {
 		return err
@@ -83,7 +71,7 @@ func (app *application) handleJSONCreateUrl(c echo.Context) error {
 	})
 }
 
-func (app *application) getUrlByUserHandler(c echo.Context) error {
+func (app *application) getUrlByUserHandlerJson(c echo.Context) error {
 	userID := c.Param("user_id")
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
@@ -116,6 +104,27 @@ func (app *application) deleteUrlHandlerPost(c echo.Context) error {
 	user, _ := app.userFromContext(c)
 	data.User = user
 	return app.dashboardHandler(c)
+}
+
+// deleteUrlHandlerJsonPost handles the deletion of a url via json.
+func (app *application) deleteUrlHandlerJsonPost(c echo.Context) error {
+	req := struct {
+		ID uuid.UUID `json:"id"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	err := app.models.Urls.Delete(req.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, struct {
+		Message string `json:"message"`
+	}{
+		Message: "Url deleted successfully!",
+	})
 }
 
 // genFullUrl generates the full url for a given short url

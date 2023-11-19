@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/bueti/shrinkster/ui"
 	"github.com/labstack/echo/v4"
@@ -29,6 +30,9 @@ func (app *application) registerMiddleware() {
 		CookieSecure:   true,
 		CookieHTTPOnly: true,
 		CookieSameSite: http.SameSiteStrictMode,
+		Skipper: func(c echo.Context) bool {
+			return strings.Contains(c.Path(), "/api")
+		},
 	}))
 	app.echo.Use(middleware.Secure())
 	app.echo.Use(middleware.BodyLimit("1M"))
@@ -43,17 +47,12 @@ func (app *application) registerRoutes() {
 	// static pages
 	app.echo.GET("/", app.indexHandler)
 	app.echo.GET("/about", app.aboutHandler)
-
-	// healthcheck
-	app.echo.GET("/health", app.healthcheckHandler)
 	app.echo.GET("/.well-known/security.txt", app.securityTxtHandler)
 
 	// dashboard
 	app.echo.GET("dashboard", app.dashboardHandler, app.authenticate)
 
 	// user
-	app.echo.GET("/users", app.listUsersHandler, app.authenticate, app.requireRole("admin"))
-	app.echo.GET("/users/:id", app.getUserHandler, app.authenticate)
 	app.echo.GET("/users/activate", app.activateUserHandler)
 	app.echo.GET("/users/resend-activation", app.resendActivationLinkHandler)
 	app.echo.POST("/users/resend-activation", app.resendActivationLinkHandlerPost)
@@ -67,6 +66,24 @@ func (app *application) registerRoutes() {
 	app.echo.GET("/urls/new", app.createUrlFormHandler, app.authenticate)
 	app.echo.POST("/urls", app.createUrlHandlerPost, app.authenticate)
 	app.echo.POST("/urls/:id", app.deleteUrlHandlerPost, app.authenticate, app.mustBeOwner)
-	app.echo.GET("/urls/:user_id", app.getUrlByUserHandler, app.authenticate, app.mustBeOwner)
 	app.echo.GET("/s/*", app.redirectUrlHandler)
+
+	// create a group for all api calls. these accept json and return json
+	api := app.echo.Group("/api")
+
+	// healthcheck
+	api.GET("/health", app.healthcheckHandlerJson)
+
+	// api/users
+	api.GET("/users", app.listUsersHandlerJson, app.authenticate, app.requireRole("admin"))
+	api.GET("/users/:id", app.getUserHandlerJson, app.authenticate)
+	api.GET("/users/activate", app.activateUserHandlerJson)
+	api.POST("/users/resend-activation", app.resendActivationLinkHandlerJsonPost)
+	api.POST("/signup", app.signupHandlerJsonPost)
+	api.POST("/login", app.loginHandlerJsonPost)
+
+	// api/urls
+	api.POST("/urls", app.createUrlHandlerJsonPost, app.authenticate)
+	api.POST("/urls/:id", app.deleteUrlHandlerJsonPost, app.authenticate, app.mustBeOwner)
+	api.GET("/urls/:user_id", app.getUrlByUserHandlerJson, app.authenticate, app.mustBeOwner)
 }
