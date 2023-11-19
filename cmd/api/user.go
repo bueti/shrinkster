@@ -19,18 +19,6 @@ func (app *application) signupHandler(c echo.Context) error {
 }
 
 func (app *application) signupHandlerPost(c echo.Context) error {
-	contentType := c.Request().Header.Get(echo.HeaderContentType)
-	switch contentType {
-	case echo.MIMEApplicationJSON:
-		return app.handleJSONSignup(c)
-	case echo.MIMEApplicationForm:
-		return app.handleFormSignup(c)
-	default:
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
-	}
-}
-
-func (app *application) handleFormSignup(c echo.Context) error {
 	name := c.FormValue("name")
 	email := c.FormValue("email")
 	password := c.FormValue("password")
@@ -70,25 +58,14 @@ func (app *application) handleFormSignup(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "signup.tmpl.html", data)
 	}
 
-	// Launch a goroutine which runs an anonymous function that sends the welcome email.
-
-	go func() {
-		data := map[string]any{
-			"activationToken": token.Plaintext,
-			"userID":          user.ID,
-		}
-
-		err = app.mailer.Send(user.Email, "welcome.tmpl.html", data)
-		if err != nil {
-			log.Error(err)
-		}
-	}()
+	newUser, _ := app.models.Users.GetByID(user.ID)
+	sendActivationEmail(token, newUser, app)
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "Your signup was successful. Please check your mailbox for the account activation link.")
 	return c.Redirect(http.StatusSeeOther, "/login")
 }
 
-func (app *application) handleJSONSignup(c echo.Context) error {
+func (app *application) signupHandlerJsonPost(c echo.Context) error {
 	var body model.UserRegisterReq
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -108,20 +85,7 @@ func (app *application) handleJSONSignup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, userResponse)
 }
 
-// LoginUserHandler handles the login of a user
 func (app *application) loginHandlerPost(c echo.Context) error {
-	contentType := c.Request().Header.Get(echo.HeaderContentType)
-	switch contentType {
-	case echo.MIMEApplicationJSON:
-		return app.handleJSONLogin(c)
-	case echo.MIMEApplicationForm:
-		return app.handleFormLogin(c)
-	default:
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unsupported content type"})
-	}
-}
-
-func (app *application) handleFormLogin(c echo.Context) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 
@@ -145,7 +109,7 @@ func (app *application) handleFormLogin(c echo.Context) error {
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
-func (app *application) handleJSONLogin(c echo.Context) error {
+func (app *application) loginHandlerJsonPost(c echo.Context) error {
 	var body model.UserLoginRequest
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -182,7 +146,7 @@ func (app *application) handleJSONLogin(c echo.Context) error {
 	return c.JSON(http.StatusOK, userLoginResponse)
 }
 
-func (app *application) getUserHandler(c echo.Context) error {
+func (app *application) getUserHandlerJson(c echo.Context) error {
 
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -228,6 +192,34 @@ func (app *application) activateUserHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
+// activateUserHandlerJson handles the activation of a user with json.
+func (app *application) activateUserHandlerJson(c echo.Context) error {
+	req := struct {
+		Token string `json:"token"`
+	}{}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	err := model.ValidateTokenPlaintext(req.Token)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	userID, err := app.models.Tokens.GetUserID(model.ScopeActivation, req.Token)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	err = app.models.Users.Activate(userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Your account has been activated successfully. Please log in.")
+}
+
 // resendActivationLinkHandler handles the display of the resend activation link form.
 func (app *application) resendActivationLinkHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "resend_activation_link.tmpl.html", app.newTemplateData(c))
@@ -250,24 +242,39 @@ func (app *application) resendActivationLinkHandlerPost(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "home.tmpl.html", data)
 	}
 
-	go func() {
-		data := map[string]any{
-			"activationToken": token.Plaintext,
-			"userID":          user.ID,
-		}
-
-		err = app.mailer.Send(user.Email, "welcome.tmpl.html", data)
-		if err != nil {
-			log.Error(err)
-		}
-	}()
+	sendActivationEmail(token, user, app)
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "The activation link has been resent. Please check your mailbox.")
 	data := app.newTemplateData(c)
 	return c.Render(http.StatusOK, "home.tmpl.html", data)
 }
 
-func (app *application) listUsersHandler(c echo.Context) error {
+// resendActivationLinkHandlerJsonPost handles the resending of an activation link with json.
+func (app *application) resendActivationLinkHandlerJsonPost(c echo.Context) error {
+	body := struct {
+		Email string `json:"email"`
+	}{}
+
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	user, err := app.models.Users.GetByEmail(body.Email)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, model.ScopeActivation)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	sendActivationEmail(token, user, app)
+
+	return c.JSON(http.StatusOK, "The activation link has been resent. Please check your mailbox.")
+}
+
+func (app *application) listUsersHandlerJson(c echo.Context) error {
 	users, err := app.models.Users.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -291,4 +298,18 @@ func (app *application) logoutHandlerPost(c echo.Context) error {
 	c.Set("user", nil)
 	app.sessionManager.Put(c.Request().Context(), "flash", "You've been logged out successfully!")
 	return c.Render(http.StatusOK, "home.tmpl.html", app.newTemplateData(c))
+}
+
+func sendActivationEmail(token *model.Token, user *model.User, app *application) {
+	go func() {
+		data := map[string]any{
+			"activationToken": token.Plaintext,
+			"userID":          user.ID,
+		}
+
+		err := app.mailer.Send(user.Email, "welcome.tmpl.html", data)
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 }

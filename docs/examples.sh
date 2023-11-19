@@ -1,4 +1,4 @@
-HOST=${HOST:-localhost:8080}
+HOST=https://localhost:8080/api
 
 admin_id="63920346-70d0-40ec-8f53-f8d019628804"
 non_privileged_id="a6ba3348-6bb3-49fa-81f2-87fb9f984b56"
@@ -11,7 +11,7 @@ curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
 "password_confirm": "EJ2pooBa0caivemu"
 }'
 
-curl -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
+curl -k -XPOST ${HOST}/signup -H "Content-Type: application/json" -d '{
 "name": "non-privileged user",
 "email": "user@shrinkster.ch",
 "password": "12345678",
