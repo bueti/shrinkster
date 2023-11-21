@@ -78,6 +78,25 @@ func main() {
 				Usage:   "List current URLs",
 				Action:  app.list,
 			},
+			{
+				Name:    "create",
+				Aliases: []string{"c"},
+				Usage:   "Create a new URL",
+				Action:  app.create,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "original",
+						Value:    "",
+						Usage:    "The original URL",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "short_code",
+						Value: "",
+						Usage: "The short code for the URL",
+					},
+				},
+			},
 		},
 	}
 
@@ -190,6 +209,48 @@ func (app *application) login(context *cli.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+// create creates a new url and returns the short url
+func (app *application) create(context *cli.Context) error {
+	var urlReq model.UrlCreateRequest
+	urlReq.Original = context.String("original")
+	urlReq.ShortCode = context.String("short_code")
+	urlReq.UserID = app.cfg.ID
+
+	marshalled, err := json.Marshal(urlReq)
+	if err != nil {
+		app.logger.Error("impossible to marshall", err)
+		return err
+	}
+
+	token, err := app.getToken(app.cfg.Email)
+	app.client.Token = token
+
+	res, err := app.client.DoRequest("POST", "/api/urls", bytes.NewReader(marshalled))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// check the response
+	if res.StatusCode != http.StatusCreated {
+		return fmt.Errorf("login failed: %s", res.Status)
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	var urlResp model.UrlResponse
+	err = json.Unmarshal(resBody, &urlResp)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(urlResp.FullUrl)
 	return nil
 }
 
