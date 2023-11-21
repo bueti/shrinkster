@@ -140,6 +140,7 @@ func (app *application) loginHandlerJsonPost(c echo.Context) error {
 
 	userLoginResponse := model.UserLoginResponse{
 		ID:    user.ID,
+		Email: user.Email,
 		Token: string(jwtBytes),
 	}
 

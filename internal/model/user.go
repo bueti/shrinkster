@@ -46,6 +46,7 @@ type UserLoginRequest struct {
 
 type UserLoginResponse struct {
 	ID    uuid.UUID `json:"id"`
+	Email string    `json:"email"`
 	Token string    `json:"token"`
 }
 

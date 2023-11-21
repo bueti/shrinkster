@@ -61,6 +61,9 @@ func (app *application) dashboardHandler(c echo.Context) error {
 
 func (app *application) userFromContext(c echo.Context) (*model.User, error) {
 	userID := app.sessionManager.Get(c.Request().Context(), "userID")
+	if userID == nil {
+		return nil, fmt.Errorf("no user id in session")
+	}
 	userUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		return nil, err

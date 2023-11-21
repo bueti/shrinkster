@@ -60,7 +60,7 @@ func (app *application) jsonAuthenticate(c echo.Context, next echo.HandlerFunc) 
 		return c.JSON(http.StatusBadRequest, "Invalid Token")
 	}
 
-	c.Set("user", user)
+	app.sessionManager.Put(c.Request().Context(), "userID", user.ID.String())
 
 	return next(c)
 }
@@ -96,11 +96,16 @@ func (app *application) mustBeOwner(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 
-		urlID := c.Param("id")
-		urlUUID := uuid.MustParse(urlID)
-		url := app.models.Urls.Find(urlUUID)
+		//urlID := c.Param("id")
+		//urlUUID := uuid.MustParse(urlID)
+		//url := app.models.Urls.Find(urlUUID)
+		userReqID := c.Param("user_id")
+		userRedUUID, err := uuid.Parse(userReqID)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
 
-		if user.ID != url.UserID {
+		if user.ID != userRedUUID {
 			return c.JSON(http.StatusUnauthorized, "Unauthorized")
 		}
 
