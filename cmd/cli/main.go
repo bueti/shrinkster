@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/bueti/shrinkster/internal/config"
 	"github.com/bueti/shrinkster/internal/model"
@@ -21,13 +22,19 @@ type application struct {
 	client *shrink.Client
 	cli    *cli.App
 	cfg    config.Config
+	logger log.Logger
 }
 
 func main() {
-	// create a http client
+	logger := log.NewWithOptions(os.Stderr, log.Options{
+		ReportCaller:    true,
+		ReportTimestamp: true,
+		TimeFormat:      time.Kitchen,
+	})
+
 	c := shrink.NewClient("")
 	if os.Getenv("DEBUG") == "true" {
-		log.SetLevel(log.DebugLevel)
+		logger.SetLevel(log.DebugLevel)
 		c.Host = "https://localhost:8080"
 		c.HttpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -36,21 +43,22 @@ func main() {
 
 	cfg, err := config.Load()
 	if err != nil {
-		log.Debug("no configuration found", err)
+		logger.Debug("no configuration found", err)
 	}
 
 	app := &application{
 		client: c,
 		cfg:    cfg,
+		logger: *logger,
 	}
 
 	app.cli = &cli.App{
+		Name: config.AppName,
 		Commands: []*cli.Command{
 			{
-				Name:    "login",
-				Aliases: []string{"l"},
-				Usage:   "Login to Shrinkster",
-				Action:  app.login,
+				Name:   "login",
+				Usage:  "Login to Shrinkster",
+				Action: app.login,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "username",
@@ -83,7 +91,7 @@ func (app *application) list(context *cli.Context) error {
 
 	token, err := app.getToken(app.cfg.Email)
 	if err != nil {
-		log.Error("impossible to get token", err)
+		app.logger.Error("impossible to get token", err)
 		return err
 	}
 
@@ -94,7 +102,8 @@ func (app *application) list(context *cli.Context) error {
 
 	marshalled, err := json.Marshal(urlReq)
 	if err != nil {
-		log.Fatal("impossible to marshall", err)
+		app.logger.Error("impossible to marshall", err)
+		return err
 	}
 
 	res, err := app.client.DoRequest("GET", fmt.Sprintf("/api/urls/%s", app.cfg.ID), bytes.NewReader(marshalled))
@@ -110,13 +119,15 @@ func (app *application) list(context *cli.Context) error {
 
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal("impossible to read all body of response: %s", err)
+		app.logger.Error("impossible to read all body of response: %s", err)
+		return err
 	}
 
 	var urlsResp []model.UrlByUserResponse
 	err = json.Unmarshal(resBody, &urlsResp)
 	if err != nil {
-		log.Fatal("impossible to unmarshall response: %s", err)
+		app.logger.Error("impossible to unmarshall response: %s", err)
+		return err
 	}
 
 	fmt.Println("Short\t\t-> Original\tVisits")
@@ -136,7 +147,8 @@ func (app *application) login(context *cli.Context) error {
 
 	marshalled, err := json.Marshal(userReq)
 	if err != nil {
-		log.Fatal("impossible to marshall", err)
+		app.logger.Error("impossible to marshall", err)
+		return err
 	}
 
 	// create a new POST request with username and password
@@ -154,25 +166,27 @@ func (app *application) login(context *cli.Context) error {
 
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal("impossible to read all body of response: %s", err)
+		app.logger.Error("impossible to read all body of response: %s", err)
+		return err
 	}
 
 	var userResp model.UserLoginResponse
 	err = json.Unmarshal(resBody, &userResp)
 	if err != nil {
-		log.Fatal("impossible to unmarshall response: %s", err)
+		app.logger.Error("impossible to unmarshall response: %s", err)
+		return err
 	}
 
 	// store the username
 	err = config.Save(userResp)
 	if err != nil {
-		log.Error("impossible to set username in config: %s", err)
+		app.logger.Error("impossible to set username in config: %s", err)
 		return err
 	}
 
 	err = app.setToken(context, userResp)
 	if err != nil {
-		log.Error("impossible to set token in keyring: %s", err)
+		app.logger.Error("impossible to set token in keyring: %s", err)
 		return err
 	}
 
