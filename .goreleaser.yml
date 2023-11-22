@@ -12,7 +12,7 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-  - main: ./cmd/cli/
+    main: ./cmd/cli/
 release:
   prerelease: auto
 
