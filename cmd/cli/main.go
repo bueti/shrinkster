@@ -55,7 +55,8 @@ func main() {
 	}
 
 	app.cli = &cli.App{
-		Name: config.AppName,
+		Name:        config.AppName,
+		Description: "Shrinkster (shrink.ch) is a URL shortener written in Go.",
 		Commands: []*cli.Command{
 			{
 				Name:   "login",
@@ -111,6 +112,12 @@ func main() {
 						Usage: "The ID of the URL to delete",
 					},
 				},
+			},
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "Print the version",
+				Action:  app.version,
 			},
 		},
 	}

@@ -11,7 +11,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w
+      - -s -w github.com/bueti/shrinkster/cmd/cli.version={{.Version}} -X github.com/bueti/shrinkster/cmd/cli.commit={{.Commit}} -X github.com/bueti/shrinkster/cmd/cli.date={{.Date}}
     main: ./cmd/cli/
 release:
   prerelease: auto
