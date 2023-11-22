@@ -126,6 +126,19 @@ func (app *application) mustBeOwner(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			return next(c)
 		}
+		if handlerName == "/urls/:id" && c.Request().Method == http.MethodPost {
+			urlUUID, err := uuid.Parse(c.Param("id"))
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+
+			url := app.models.Urls.Find(urlUUID)
+
+			if url.UserID != user.ID {
+				return c.JSON(http.StatusUnauthorized, "Unauthorized")
+			}
+			return next(c)
+		}
 
 		return c.JSON(http.StatusUnauthorized, "Unauthorized")
 	}
