@@ -19,6 +19,12 @@ import (
 	"github.com/zalando/go-keyring"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 type application struct {
 	client *shrink.Client
 	cli    *cli.App
@@ -328,4 +334,9 @@ func (app *application) getToken(username string) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func (app *application) version(context *cli.Context) error {
+	fmt.Printf("%s %s, commit %s, built at %s\n", config.AppName, version, commit, date)
+	return nil
 }
