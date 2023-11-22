@@ -106,23 +106,16 @@ func (app *application) deleteUrlHandlerPost(c echo.Context) error {
 	return app.dashboardHandler(c)
 }
 
-// deleteUrlHandlerJsonPost handles the deletion of a url via json.
-func (app *application) deleteUrlHandlerJsonPost(c echo.Context) error {
-	req := struct {
-		ID uuid.UUID `json:"id"`
-	}{}
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
+// urlHandlerJsonDelete handles the deletion of a url via json.
+func (app *application) urlHandlerJsonDelete(c echo.Context) error {
+	urlReq := app.sessionManager.Get(c.Request().Context(), "urlReq").(*model.UrlDeleteRequest)
 
-	err := app.models.Urls.Delete(req.ID)
+	err := app.models.Urls.Delete(urlReq.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, struct {
-		Message string `json:"message"`
-	}{
+	return c.JSON(http.StatusOK, &model.UrlDeleteResponse{
 		Message: "Url deleted successfully!",
 	})
 }

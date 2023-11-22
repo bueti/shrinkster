@@ -84,6 +84,6 @@ func (app *application) registerRoutes() {
 
 	// api/urls
 	api.POST("/urls", app.createUrlHandlerJsonPost, app.authenticate)
-	api.POST("/urls/:id", app.deleteUrlHandlerJsonPost, app.authenticate, app.mustBeOwner)
+	api.DELETE("/urls", app.urlHandlerJsonDelete, app.authenticate, app.mustBeOwner)
 	api.GET("/urls/:user_id", app.getUrlByUserHandlerJson, app.authenticate, app.mustBeOwner)
 }

@@ -49,6 +49,14 @@ type UrlByUserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UrlDeleteRequest struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type UrlDeleteResponse struct {
+	Message string `json:"message"`
+}
+
 func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	url := new(Url)
 

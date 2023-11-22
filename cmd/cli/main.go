@@ -14,8 +14,15 @@ import (
 	"github.com/bueti/shrinkster/internal/model"
 	"github.com/bueti/shrinkster/internal/shrink"
 	"github.com/charmbracelet/log"
+	"github.com/google/uuid"
 	"github.com/urfave/cli/v2"
 	"github.com/zalando/go-keyring"
+)
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
 )
 
 type application struct {
@@ -39,6 +46,7 @@ func main() {
 		c.HttpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
+		c.HttpClient.Timeout = 0
 	}
 
 	cfg, err := config.Load()
@@ -53,7 +61,8 @@ func main() {
 	}
 
 	app.cli = &cli.App{
-		Name: config.AppName,
+		Name:        config.AppName,
+		Description: "Shrinkster (shrink.ch) is a URL shortener written in Go.",
 		Commands: []*cli.Command{
 			{
 				Name:   "login",
@@ -97,6 +106,25 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:    "delete",
+				Aliases: []string{"d"},
+				Usage:   "Delete an URL",
+				Action:  app.delete,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "id",
+						Value: "",
+						Usage: "The ID of the URL to delete",
+					},
+				},
+			},
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "Print the version",
+				Action:  app.version,
+			},
 		},
 	}
 
@@ -105,12 +133,13 @@ func main() {
 	}
 }
 
+// list all urls from the logged in user
 func (app *application) list(context *cli.Context) error {
 	fmt.Println("List URLs")
 
 	token, err := app.getToken(app.cfg.Email)
 	if err != nil {
-		app.logger.Error("impossible to get token", err)
+		app.logger.Error("failed to get token", err)
 		return err
 	}
 
@@ -121,7 +150,7 @@ func (app *application) list(context *cli.Context) error {
 
 	marshalled, err := json.Marshal(urlReq)
 	if err != nil {
-		app.logger.Error("impossible to marshall", err)
+		app.logger.Error("failed to marshall", err)
 		return err
 	}
 
@@ -138,25 +167,26 @@ func (app *application) list(context *cli.Context) error {
 
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		app.logger.Error("impossible to read all body of response: %s", err)
+		app.logger.Error("failed to read all body of response: %s", err)
 		return err
 	}
 
 	var urlsResp []model.UrlByUserResponse
 	err = json.Unmarshal(resBody, &urlsResp)
 	if err != nil {
-		app.logger.Error("impossible to unmarshall response: %s", err)
+		app.logger.Error("failed to unmarshall response: %s", err)
 		return err
 	}
 
-	fmt.Println("Short\t\t-> Original\tVisits")
+	fmt.Println("ID\t\t\t\t\tShort\t\tVisits\tOriginal")
 	for _, url := range urlsResp {
-		fmt.Println(fmt.Sprintf("- %s\t-> %s\t%d", url.ShortUrl, url.Original, url.Visits))
+		fmt.Println(fmt.Sprintf("- %s\t%s\t%d\t%s", url.ID, url.ShortUrl, url.Visits, url.Original))
 	}
 	return nil
 
 }
 
+// login to shrinkster
 func (app *application) login(context *cli.Context) error {
 	fmt.Println("Logging in to Shrinkster...")
 
@@ -166,7 +196,7 @@ func (app *application) login(context *cli.Context) error {
 
 	marshalled, err := json.Marshal(userReq)
 	if err != nil {
-		app.logger.Error("impossible to marshall", err)
+		app.logger.Error("failed to marshall", err)
 		return err
 	}
 
@@ -185,27 +215,27 @@ func (app *application) login(context *cli.Context) error {
 
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		app.logger.Error("impossible to read all body of response: %s", err)
+		app.logger.Error("failed to read body of response: %s", err)
 		return err
 	}
 
 	var userResp model.UserLoginResponse
 	err = json.Unmarshal(resBody, &userResp)
 	if err != nil {
-		app.logger.Error("impossible to unmarshall response: %s", err)
+		app.logger.Error("failed to unmarshall response: %s", err)
 		return err
 	}
 
 	// store the username
 	err = config.Save(userResp)
 	if err != nil {
-		app.logger.Error("impossible to set username in config: %s", err)
+		app.logger.Error("failed to set username in config: %s", err)
 		return err
 	}
 
 	err = app.setToken(context, userResp)
 	if err != nil {
-		app.logger.Error("impossible to set token in keyring: %s", err)
+		app.logger.Error("failed to set token in keyring: %s", err)
 		return err
 	}
 
@@ -221,7 +251,7 @@ func (app *application) create(context *cli.Context) error {
 
 	marshalled, err := json.Marshal(urlReq)
 	if err != nil {
-		app.logger.Error("impossible to marshall", err)
+		app.logger.Error("failed to marshall", err)
 		return err
 	}
 
@@ -254,6 +284,42 @@ func (app *application) create(context *cli.Context) error {
 	return nil
 }
 
+// delete an existing url
+func (app *application) delete(context *cli.Context) error {
+	var (
+		err    error
+		urlReq model.UrlDeleteRequest
+	)
+
+	urlReq.ID, err = uuid.Parse(context.String("id"))
+	if err != nil {
+		return fmt.Errorf("failed to parse id: %s", err)
+	}
+
+	marshalled, err := json.Marshal(urlReq)
+	if err != nil {
+		app.logger.Error("failed to marshall", err)
+		return err
+	}
+
+	token, err := app.getToken(app.cfg.Email)
+	app.client.Token = token
+
+	res, err := app.client.DoRequest("DELETE", "/api/urls", bytes.NewReader(marshalled))
+	if err != nil {
+		app.logger.Error("failed to delete url", err.Error())
+		return err
+	}
+	defer res.Body.Close()
+
+	// check the response
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("deletion failed: %s", res.Status)
+	}
+
+	return nil
+}
+
 func (app *application) setToken(context *cli.Context, userResp model.UserLoginResponse) error {
 	if err := keyring.Set("shrinkster", context.String("username"), userResp.Token); err != nil {
 		return err
@@ -268,4 +334,9 @@ func (app *application) getToken(username string) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func (app *application) version(context *cli.Context) error {
+	fmt.Printf("%s %s, commit %s, built at %s\n", config.AppName, version, commit, date)
+	return nil
 }
