@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bueti/shrinkster/internal/model"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/pascaldekloe/jwt"
@@ -96,19 +97,36 @@ func (app *application) mustBeOwner(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 
-		//urlID := c.Param("id")
-		//urlUUID := uuid.MustParse(urlID)
-		//url := app.models.Urls.Find(urlUUID)
-		userReqID := c.Param("user_id")
-		userRedUUID, err := uuid.Parse(userReqID)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err.Error())
+		handlerName := c.Path()
+		if handlerName == "/api/urls" && c.Request().Method == http.MethodDelete {
+			urlReq := new(model.UrlDeleteRequest)
+			if err := c.Bind(urlReq); err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+			// Store urlReq in context
+			app.sessionManager.Put(c.Request().Context(), "urlReq", urlReq)
+			//c.Set("urlReq", urlReq)
+
+			url := app.models.Urls.Find(urlReq.ID)
+
+			if url.UserID != user.ID {
+				return c.JSON(http.StatusUnauthorized, "Unauthorized")
+			}
+			return next(c)
+		}
+		if handlerName == "/api/urls/:user_id" {
+			userReqID := c.Param("user_id")
+			userRedUUID, err := uuid.Parse(userReqID)
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+
+			if user.ID != userRedUUID {
+				return c.JSON(http.StatusUnauthorized, "Unauthorized")
+			}
+			return next(c)
 		}
 
-		if user.ID != userRedUUID {
-			return c.JSON(http.StatusUnauthorized, "Unauthorized")
-		}
-
-		return next(c)
+		return c.JSON(http.StatusUnauthorized, "Unauthorized")
 	}
 }
