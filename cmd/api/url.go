@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,8 +45,9 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
+	var qrCodeURL string
 	if qrCodeStr == "on" {
-		err := app.createQRCode(original)
+		qrCodeURL, err = app.createQRCode(original)
 		if err != nil {
 			app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create QR Code.")
 		}
@@ -55,6 +57,7 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 		Original:  original,
 		ShortCode: shortCode,
 		UserID:    user.ID,
+		QRCodeURL: qrCodeURL,
 	}
 	_, err = app.models.Urls.Create(urlReq)
 	if err != nil {
@@ -68,52 +71,52 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 	return app.dashboardHandler(c)
 }
 
-// createQRCode creates a QR Code for a given url.
-func (app *application) createQRCode(original string) error {
+// createQRCode creates a QR Code for a given url. It returns the url to the QR Code.
+func (app *application) createQRCode(original string) (string, error) {
 	qrc, err := qrcode.New(original)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// generate a temporary file to store the image
 	f, err := os.CreateTemp("", "qr-code-*.png")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer os.Remove(f.Name())
 
 	w, err := standard.New(f.Name())
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// save file
 	if err = qrc.Save(w); err != nil {
 		fmt.Printf("could not save image: %v", err)
-		return err
+		return "", err
 	}
 
 	// upload file to bucket
-	if err = app.storeFileInBucket(f); err != nil {
+	qrLocation, err := app.storeFileInBucket(f)
+	if err != nil {
 		fmt.Printf("could not upload file: %v", err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return qrLocation, nil
 }
 
 // storeFileInBucket stores a file in a bucket.
-func (app *application) storeFileInBucket(f *os.File) error {
+func (app *application) storeFileInBucket(f *os.File) (string, error) {
 	result, err := app.uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(app.config.aws.bucket),
-		Key:    aws.String(f.Name()),
+		Key:    aws.String(filepath.Base(f.Name())),
 		Body:   f,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to upload file, %v", err)
+		return "", fmt.Errorf("failed to upload file, %v", err)
 	}
-	fmt.Printf("file uploaded to, %s\n", aws.StringValue(&result.Location))
-	return nil
+	return aws.StringValue(&result.Location), nil
 }
 
 func (app *application) createUrlHandlerJsonPost(c echo.Context) error {
