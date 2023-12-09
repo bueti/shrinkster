@@ -44,7 +44,7 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
-	if qrCodeStr == "true" {
+	if qrCodeStr == "on" {
 		err := app.createQRCode(original)
 		if err != nil {
 			app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create QR Code.")
