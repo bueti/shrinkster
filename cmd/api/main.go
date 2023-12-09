@@ -16,6 +16,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 const version = "0.0.1"
@@ -36,6 +40,12 @@ type config struct {
 		password string
 		sender   string
 	}
+	aws struct {
+		region          string
+		bucket          string
+		accessKeyID     string
+		secretAccessKey string
+	}
 	signingKey string
 	debug      bool
 }
@@ -46,6 +56,7 @@ type application struct {
 	mailer         mailer.Mailer
 	models         model.Models
 	sessionManager *scs.SessionManager
+	uploader       *s3manager.Uploader
 }
 
 func main() {
@@ -61,6 +72,10 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "bbu+shrink@ik.me", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "no-reply@shrink.ch", "SMTP sender")
+	flag.StringVar(&cfg.aws.region, "aws-region", "eu-central-1", "AWS S3 region")
+	flag.StringVar(&cfg.aws.bucket, "aws-bucket", "shrink.ch", "AWS S3 bucket")
+	flag.StringVar(&cfg.aws.accessKeyID, "aws-access-key-id", "", "AWS access key ID")
+	flag.StringVar(&cfg.aws.secretAccessKey, "aws-secret-access-key", "", "AWS secret access key")
 
 	displayVersion := flag.Bool("version", false, "Display version and exit")
 
@@ -95,9 +110,16 @@ func main() {
 	sessionManager.Store = postgresstore.New(dbd)
 	sessionManager.Lifetime = 14 * 24 * time.Hour
 
+	// AWS Client
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(cfg.aws.region)},
+	)
+	uploader := s3manager.NewUploader(sess)
+
 	app := &application{
 		sessionManager: sessionManager,
 		mailer:         mailer.New(cfg.smtp.server, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		uploader:       uploader,
 	}
 
 	app.echo = app.initEcho()
@@ -169,6 +191,22 @@ func parsEnvVars(cfg *config) {
 			log.Fatal("SMTP_SENDER is required")
 		}
 		cfg.smtp.sender = envSMTPSender
+	}
+
+	if cfg.aws.secretAccessKey == "" {
+		secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+		if secretKey == "" {
+			log.Fatal("AWS_SECRET_ACCESS_KEY is required")
+		}
+		cfg.aws.secretAccessKey = secretKey
+	}
+
+	if cfg.aws.accessKeyID == "" {
+		accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+		if accessKey == "" {
+			log.Fatal("AWS_ACCESS_KEY_ID is required")
+		}
+		cfg.aws.accessKeyID = accessKey
 	}
 
 	_, cfg.debug = os.LookupEnv("DEBUG")
