@@ -80,6 +80,8 @@ jobs:
           envkey_TLS_KEY: ${{ secrets.TLS_KEY }}
           envkey_DSN: ${{ secrets.DSN }}
           envkey_SHA_SHORT: ${{ steps.vars.outputs.sha_short }}
+          envkey_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          envkey_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           directory: .
           file_name: .env
 
