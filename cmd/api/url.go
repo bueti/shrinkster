@@ -37,7 +37,6 @@ func (app *application) createUrlFormHandler(c echo.Context) error {
 func (app *application) createUrlHandlerPost(c echo.Context) error {
 	original := c.FormValue("original")
 	shortCode := c.FormValue("short_code")
-	qrCodeStr := c.FormValue("qr_code")
 
 	user, err := app.userFromContext(c)
 	if err != nil {
@@ -45,24 +44,25 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 		return c.Render(http.StatusBadRequest, "login.tmpl.html", app.newTemplateData(c))
 	}
 
-	var qrCodeURL string
-	if qrCodeStr == "on" {
-		qrCodeURL, err = app.createQRCode(original)
-		if err != nil {
-			app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create QR Code.")
-		}
-	}
-
 	urlReq := &model.UrlCreateRequest{
 		Original:  original,
 		ShortCode: shortCode,
 		UserID:    user.ID,
-		QRCodeURL: qrCodeURL,
 	}
-	_, err = app.models.Urls.Create(urlReq)
+	url, err := app.models.Urls.Create(urlReq)
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
 		return c.Render(http.StatusBadRequest, "create_url.tmpl.html", app.newTemplateData(c))
+	}
+
+	qrCodeURL, err := app.createQRCode(genFullUrl(fmt.Sprintf(c.Scheme()+"://"+c.Request().Host), url.ShortUrl))
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create QR Code.")
+	}
+
+	err = app.models.Urls.SetQRCodeURL(&url, qrCodeURL)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to set QR Code URL.")
 	}
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "Url created successfully!")

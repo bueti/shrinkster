@@ -30,7 +30,6 @@ type UrlCreateRequest struct {
 	Original  string    `json:"original" validate:"required,url"`
 	ShortCode string    `json:"short_code,omitempty" validate:"alphanum,min=3,max=11"`
 	UserID    uuid.UUID `json:"user_id"`
-	QRCodeURL string    `json:"qr_code_url,omitempty"`
 }
 
 type UrlResponse struct {
@@ -80,7 +79,6 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 
 	url.Original = urlReq.Original
 	url.UserID = urlReq.UserID
-	url.QRCodeURL = urlReq.QRCodeURL
 
 	result := u.DB.Create(url)
 	if result.Error != nil {
@@ -88,6 +86,16 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	}
 
 	return *url, nil
+}
+
+// SetQRCodeURL sets the QRCodeURL for a given url
+func (u *UrlModel) SetQRCodeURL(url *Url, qrCodeURL string) error {
+	result := u.DB.Model(url).Update("qr_code_url", qrCodeURL)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
 
 func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
