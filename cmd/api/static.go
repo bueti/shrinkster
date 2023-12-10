@@ -49,6 +49,7 @@ func (app *application) dashboardHandler(c echo.Context) error {
 		url.ShortUrl = genFullUrl(fmt.Sprintf(c.Scheme()+"://"+c.Request().Host), urlByUserResponse.ShortUrl)
 		url.Original = urlByUserResponse.Original
 		url.Visits = urlByUserResponse.Visits
+		url.QRCodeURL = urlByUserResponse.QRCodeURL
 		url.CreatedAt = urlByUserResponse.CreatedAt
 		url.UpdatedAt = urlByUserResponse.UpdatedAt
 

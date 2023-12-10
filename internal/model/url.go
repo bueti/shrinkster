@@ -17,23 +17,25 @@ type UrlModel struct {
 
 type Url struct {
 	gorm.Model
-	ID       uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"id,omitempty"`
-	Original string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
-	ShortUrl string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
-	UserID   uuid.UUID `gorm:"type:uuid" json:"user_id"`
-	User     User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Visits   int       `gorm:"default:0" json:"visits"`
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"id,omitempty"`
+	Original  string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
+	ShortUrl  string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
+	QRCodeURL string    `gorm:"type:varchar(2048)" json:"qr_code_url,omitempty"`
+	UserID    uuid.UUID `gorm:"type:uuid" json:"user_id"`
+	User      User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Visits    int       `gorm:"default:0" json:"visits"`
 }
 
 type UrlCreateRequest struct {
 	Original  string    `json:"original" validate:"required,url"`
-	ShortCode string    `json:"short_code" validate:"omitempty,alphanum,min=3,max=11"`
+	ShortCode string    `json:"short_code,omitempty" validate:"alphanum,min=3,max=11"`
 	UserID    uuid.UUID `json:"user_id"`
 }
 
 type UrlResponse struct {
-	ID      uuid.UUID `json:"id"`
-	FullUrl string    `json:"full_url"`
+	ID        uuid.UUID `json:"id"`
+	FullUrl   string    `json:"full_url"`
+	QRCodeURL string    `json:"qr_code_url,omitempty"`
 }
 
 type UrlByUserRequest struct {
@@ -45,6 +47,7 @@ type UrlByUserResponse struct {
 	Original  string    `json:"original"`
 	ShortUrl  string    `json:"short_url"`
 	Visits    int       `json:"visits"`
+	QRCodeURL string    `json:"qr_code_url,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -85,6 +88,16 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	return *url, nil
 }
 
+// SetQRCodeURL sets the QRCodeURL for a given url
+func (u *UrlModel) SetQRCodeURL(url *Url, qrCodeURL string) error {
+	result := u.DB.Model(url).Update("qr_code_url", qrCodeURL)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
 func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 	url := new(Url)
 	result := u.DB.Where("short_url = ?", shortUrl).First(&url)
@@ -114,6 +127,7 @@ func (u *UrlModel) GetUrlByUser(userId uuid.UUID) (*[]UrlByUserResponse, error) 
 			Original:  url.Original,
 			ShortUrl:  url.ShortUrl,
 			Visits:    url.Visits,
+			QRCodeURL: url.QRCodeURL,
 			CreatedAt: url.CreatedAt,
 			UpdatedAt: url.UpdatedAt,
 		})

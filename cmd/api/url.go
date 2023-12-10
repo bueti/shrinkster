@@ -3,11 +3,17 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/bueti/shrinkster/internal/model"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/yeqown/go-qrcode/v2"
+	"github.com/yeqown/go-qrcode/writer/standard"
 )
 
 func (app *application) redirectUrlHandler(c echo.Context) error {
@@ -31,6 +37,7 @@ func (app *application) createUrlFormHandler(c echo.Context) error {
 func (app *application) createUrlHandlerPost(c echo.Context) error {
 	original := c.FormValue("original")
 	shortCode := c.FormValue("short_code")
+
 	user, err := app.userFromContext(c)
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Bad Request, are you logged in?")
@@ -42,16 +49,74 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 		ShortCode: shortCode,
 		UserID:    user.ID,
 	}
-	_, err = app.models.Urls.Create(urlReq)
+	url, err := app.models.Urls.Create(urlReq)
 	if err != nil {
 		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
 		return c.Render(http.StatusBadRequest, "create_url.tmpl.html", app.newTemplateData(c))
+	}
+
+	qrCodeURL, err := app.createQRCode(genFullUrl(fmt.Sprintf(c.Scheme()+"://"+c.Request().Host), url.ShortUrl))
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create QR Code.")
+	}
+
+	err = app.models.Urls.SetQRCodeURL(&url, qrCodeURL)
+	if err != nil {
+		app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to set QR Code URL.")
 	}
 
 	app.sessionManager.Put(c.Request().Context(), "flash", "Url created successfully!")
 	data := app.newTemplateData(c)
 	data.User = user
 	return app.dashboardHandler(c)
+}
+
+// createQRCode creates a QR Code for a given url. It returns the url to the QR Code.
+func (app *application) createQRCode(original string) (string, error) {
+	qrc, err := qrcode.New(original)
+	if err != nil {
+		return "", err
+	}
+
+	// generate a temporary file to store the image
+	f, err := os.CreateTemp("", "qr-code-*.png")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(f.Name())
+
+	w, err := standard.New(f.Name())
+	if err != nil {
+		return "", err
+	}
+
+	// save file
+	if err = qrc.Save(w); err != nil {
+		fmt.Printf("could not save image: %v", err)
+		return "", err
+	}
+
+	// upload file to bucket
+	qrLocation, err := app.storeFileInBucket(f)
+	if err != nil {
+		fmt.Printf("could not upload file: %v", err)
+		return "", err
+	}
+
+	return qrLocation, nil
+}
+
+// storeFileInBucket stores a file in a bucket.
+func (app *application) storeFileInBucket(f *os.File) (string, error) {
+	result, err := app.uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(app.config.aws.bucket),
+		Key:    aws.String(filepath.Base(f.Name())),
+		Body:   f,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload file, %v", err)
+	}
+	return aws.StringValue(&result.Location), nil
 }
 
 func (app *application) createUrlHandlerJsonPost(c echo.Context) error {

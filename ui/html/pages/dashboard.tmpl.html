@@ -6,28 +6,34 @@
     {{ if .Urls }}
     <div>
         <h3 class="mt-8 text-xl font-bold text-gray-900">Your URLs</h3>
-        <table class="table-auto">
-            <thead>
+        <table class="border-collapse border border-slate-500">
+            <thead class="bg-gray-400 font-semibold">
             <tr>
-                <th>Original</th>
-                <th>Short</th>
-                <th>Created At</th>
-                <th>Visitors</th>
-                <th>Delete</th>
+                <th class="border border-slate-600">Original</th>
+                <th class="border border-slate-600">Short</th>
+                <th class="border border-slate-600">Created At</th>
+                <th class="border border-slate-600">Visitors</th>
+                <th class="border border-slate-600">QR Code</th>
+                <th class="border border-slate-600">Delete</th>
             </tr>
             </thead>
             {{ range .Urls }}
             <tbody>
             <tr>
-                <td class="px-4 py-2">
+                <td class="px-4 py-2 border border-slate-700">
                     <a href="{{ printf " %.25s" .Original }}" class="text-indigo-600 hover:underline">{{ .Original }}</a>
                 </td>
-                <td class="px-4 py-2">
+                <td class="px-4 py-2 border border-slate-700">
                     <a href="{{ .ShortUrl }}" class="text-indigo-600 hover:underline">{{ .ShortUrl }}</a>
                 </td>
-                <td class="px-4 py-2">{{humanDate .CreatedAt }}</td>
-                <td class="px-4 py-2">{{ .Visits }}</td>
-                <td class="px-4 py-2">
+                <td class="px-4 py-2 border border-slate-700">{{humanDate .CreatedAt }}</td>
+                <td class="px-4 py-2 border border-slate-700">{{ .Visits }}</td>
+                <td class="px-4 py-2 border border-slate-700">
+                {{ if .QRCodeURL }}
+                    <img src="{{ .QRCodeURL }}" alt="QR Code" class="w-8 h-8 cursor-pointer" onclick="openOverlay('{{ .QRCodeURL }}')">
+                {{ end }}
+                </td>
+                <td class="px-4 py-2 border border-slate-700">
                     <form action="/urls/{{ .ID }}" method="POST">
                         <input type="hidden" name="_method" value="DELETE">
                         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
@@ -38,7 +44,30 @@
             </tbody>
             {{ end }}
         </table>
+        <!-- Overlay container -->
+        <div id="overlay" class="hidden bg-black bg-opacity-75 items-center justify-center">
+            <img id="overlayImage" class="max-w-full max-h-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" alt="Overlay Image">
+        </div>
     </div>
     {{end}}
 </div>
+
+<script>
+    function openOverlay(imageSrc) {
+        const overlay = document.getElementById('overlay');
+        const overlayImage = document.getElementById('overlayImage');
+
+        // Set the overlay image source
+        overlayImage.src = imageSrc;
+
+        // Show the overlay
+        overlay.classList.remove('hidden');
+
+        // Add a click event to close the overlay when clicking outside the image
+        overlay.addEventListener('click', function () {
+            overlay.classList.add('hidden');
+        });
+    }
+</script>
+
 {{end}}
