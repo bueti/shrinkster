@@ -6,11 +6,13 @@ import (
 	"strings"
 	"time"
 
+	url2 "net/url"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// Create a UrlModel struct which wraps the connection pool.
+// UrlModel is a struct which wraps the connection pool.
 type UrlModel struct {
 	DB *gorm.DB
 }
@@ -19,7 +21,7 @@ type Url struct {
 	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key" json:"id,omitempty"`
 	Original  string    `gorm:"type:varchar(2048);not null;uniqueIndex" json:"original"`
-	ShortUrl  string    `gorm:"type:varchar(11);not null;uniqueIndex" json:"short_url"`
+	ShortUrl  string    `gorm:"type:varchar(256);not null;uniqueIndex" json:"short_url"`
 	QRCodeURL string    `gorm:"type:varchar(2048)" json:"qr_code_url,omitempty"`
 	UserID    uuid.UUID `gorm:"type:uuid" json:"user_id"`
 	User      User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
@@ -71,7 +73,7 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 		return Url{}, fmt.Errorf("url cannot start with shrink.ch/s/")
 	}
 	if urlReq.ShortCode != "" {
-		url.ShortUrl = urlReq.ShortCode
+		url.ShortUrl = url2.PathEscape(urlReq.ShortCode)
 	} else {
 		id := base62Encode(rand.Uint64())
 		url.ShortUrl = id
@@ -84,6 +86,9 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 	if result.Error != nil {
 		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
 			return Url{}, fmt.Errorf("url already exists")
+		}
+		if strings.Contains(result.Error.Error(), "value too long for type character") {
+			return Url{}, fmt.Errorf("short_url is too long")
 		}
 		return Url{}, result.Error
 	}
@@ -125,10 +130,11 @@ func (u *UrlModel) GetUrlByUser(userId uuid.UUID) (*[]UrlByUserResponse, error) 
 
 	resp := []UrlByUserResponse{}
 	for _, url := range urls {
+		shortUrl, _ := url2.PathUnescape(url.ShortUrl)
 		resp = append(resp, UrlByUserResponse{
 			ID:        url.ID,
 			Original:  url.Original,
-			ShortUrl:  url.ShortUrl,
+			ShortUrl:  shortUrl,
 			Visits:    url.Visits,
 			QRCodeURL: url.QRCodeURL,
 			CreatedAt: url.CreatedAt,
