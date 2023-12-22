@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	url2 "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,7 @@ import (
 
 func (app *application) redirectUrlHandler(c echo.Context) error {
 	wildcardValue := c.Param("*")
-	shortUrl := strings.TrimSuffix(wildcardValue, "/")
+	shortUrl := url2.PathEscape(strings.TrimSuffix(wildcardValue, "/"))
 	url, err := app.models.Urls.GetRedirect(shortUrl)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -58,6 +59,8 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 			app.sessionManager.Put(c.Request().Context(), "flash_error", "URL cannot start with shrink.ch/s/")
 		case "user id is required":
 			app.sessionManager.Put(c.Request().Context(), "flash_error", "User ID is required.")
+		case "short_url is too long":
+			app.sessionManager.Put(c.Request().Context(), "flash_error", "Short URL is too long.")
 		default:
 			app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create url.")
 		}
