@@ -138,7 +138,7 @@ func (u *UrlModel) GetUrlByUser(userId uuid.UUID) (*[]UrlByUserResponse, error) 
 
 func (u *UrlModel) Delete(urlUUID uuid.UUID) error {
 	url := new(Url)
-	result := u.DB.Where("id = ?", urlUUID).Delete(&url)
+	result := u.DB.Where("id = ?", urlUUID).Unscoped().Delete(&url)
 	if result.Error != nil {
 		return result.Error
 	}
