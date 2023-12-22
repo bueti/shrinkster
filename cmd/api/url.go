@@ -51,7 +51,16 @@ func (app *application) createUrlHandlerPost(c echo.Context) error {
 	}
 	url, err := app.models.Urls.Create(urlReq)
 	if err != nil {
-		app.sessionManager.Put(c.Request().Context(), "flash_error", "Internal Server Error. Please try again later.")
+		switch err.Error() {
+		case "url already exists":
+			app.sessionManager.Put(c.Request().Context(), "flash_error", "URL already exists.")
+		case "url cannot start with shrink.ch/s/":
+			app.sessionManager.Put(c.Request().Context(), "flash_error", "URL cannot start with shrink.ch/s/")
+		case "user id is required":
+			app.sessionManager.Put(c.Request().Context(), "flash_error", "User ID is required.")
+		default:
+			app.sessionManager.Put(c.Request().Context(), "flash_error", "Failed to create url.")
+		}
 		return c.Render(http.StatusBadRequest, "create_url.tmpl.html", app.newTemplateData(c))
 	}
 
