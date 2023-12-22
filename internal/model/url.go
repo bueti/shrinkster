@@ -82,6 +82,9 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 
 	result := u.DB.Create(url)
 	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+			return Url{}, fmt.Errorf("url already exists")
+		}
 		return Url{}, result.Error
 	}
 
