@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	url2 "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,7 +18,7 @@ import (
 
 func (app *application) redirectUrlHandler(c echo.Context) error {
 	wildcardValue := c.Param("*")
-	shortUrl := url2.PathEscape(strings.TrimSuffix(wildcardValue, "/"))
+	shortUrl := strings.TrimSuffix(wildcardValue, "/")
 	url, err := app.models.Urls.GetRedirect(shortUrl)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, err.Error())
