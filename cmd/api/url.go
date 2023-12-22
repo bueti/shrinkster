@@ -22,7 +22,7 @@ func (app *application) redirectUrlHandler(c echo.Context) error {
 	shortUrl := url2.PathEscape(strings.TrimSuffix(wildcardValue, "/"))
 	url, err := app.models.Urls.GetRedirect(shortUrl)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusNotFound, err.Error())
 	}
 
 	return c.Redirect(http.StatusPermanentRedirect, url.Original)
