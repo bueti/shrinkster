@@ -73,7 +73,7 @@ func (u *UrlModel) Create(urlReq *UrlCreateRequest) (Url, error) {
 		return Url{}, fmt.Errorf("url cannot start with shrink.ch/s/")
 	}
 	if urlReq.ShortCode != "" {
-		url.ShortUrl = url2.PathEscape(urlReq.ShortCode)
+		url.ShortUrl = strings.ToLower(url2.PathEscape(urlReq.ShortCode))
 	} else {
 		id := base62Encode(rand.Uint64())
 		url.ShortUrl = id
@@ -108,7 +108,7 @@ func (u *UrlModel) SetQRCodeURL(url *Url, qrCodeURL string) error {
 
 func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 	url := new(Url)
-	result := u.DB.Where("short_url = ?", shortUrl).First(&url)
+	result := u.DB.Where("short_url = ?", strings.ToLower(shortUrl)).First(&url)
 	if result.Error != nil {
 		return Url{}, result.Error
 	}
