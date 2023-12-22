@@ -108,7 +108,7 @@ func (u *UrlModel) SetQRCodeURL(url *Url, qrCodeURL string) error {
 
 func (u *UrlModel) GetRedirect(shortUrl string) (Url, error) {
 	url := new(Url)
-	result := u.DB.Where("short_url = ?", strings.ToLower(shortUrl)).First(&url)
+	result := u.DB.Where("short_url = ?", shortUrl).First(&url)
 	if result.Error != nil {
 		return Url{}, result.Error
 	}
