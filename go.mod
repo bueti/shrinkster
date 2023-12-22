@@ -18,7 +18,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.2
 	github.com/yeqown/go-qrcode/writer/standard v1.2.2
 	github.com/zalando/go-keyring v0.2.3
-	golang.org/x/crypto v0.14.0
+	golang.org/x/crypto v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
@@ -59,8 +59,8 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
